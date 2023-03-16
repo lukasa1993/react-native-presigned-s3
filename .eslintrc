@@ -1,0 +1,16 @@
+{
+  "root": true,
+  "extends": ["@react-native-community", "prettier"],
+  "plugins": ["react-native"],
+  "settings": {
+    "react": {
+      "version": ">=16.9.0"
+    },
+    "import/ignore": ["react-native"],
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx", ".json"]
+      }
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "name": "react-native-presigned-s3",
+  "version": "0.0.1",
+  "author": "Luka Dodelia <luka@picktek.com>",
+  "bugs": {
+    "email": "luka@picktek.com",
+    "url": "https://github.com/lukasa1993/react-native-presigned-s3"
+  },
+  "description": "Helpers for s3 presign upload and download",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "homepage": "https://github.com/lukasa1993/react-native-presigned-s3#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist",
+  "repository": "github:lukasa1993/react-native-presigned-s3",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-background-upload": "6.6.0",
+    "react-native-fs": "2.20.0",
+    "@react-native-async-storage/async-storage": "*"
+  },
+  "scripts": {
+    "watch": "tsc --project tsconfig.json --watch",
+    "build": "tsc --project tsconfig.json",
+    "clean:dist": "rm -rf dist",
+    "lint": "eslint src",
+    "prebuild": "yarn clean:dist",
+    "prepare": "yarn build",
+    "test": "jest src",
+    "test:coverage": "jest --coverage",
+    "release": "semantic-release"
+  },
+  "dependencies": {
+    "p-map": "5.5.0"
+  },
+  "devDependencies": {
+    "@react-native-community/eslint-config": "3.2.0",
+    "@semantic-release/changelog": "6.0.2",
+    "@semantic-release/git": "10.0.1",
+    "@semantic-release/npm": "9.0.2",
+    "@types/react": "*",
+    "@types/react-native": "*",
+    "babel-eslint": "10.1.0",
+    "commitizen": "4.3.0",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "8.36.0",
+    "eslint-config-prettier": "8.7.0",
+    "eslint-plugin-react-native": "4.0.0",
+    "husky": "8.0.3",
+    "lint-staged": "13.2.0",
+    "metro-react-native-babel-preset": "0.76.0",
+    "prettier": "2.8.4",
+    "react": "*",
+    "react-native": "*",
+    "react-native-background-upload": "6.6.0",
+    "react-native-fs": "2.20.0",
+    "semantic-release": "*",
+    "typescript": "4.9.5"
+  },
+  "release": {
+    "branch": "master",
+    "verifyConditions": [
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git"
+    ],
+    "prepare": [
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git"
+    ]
+  },
+  "jest": {
+    "preset": "react-native"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": "yarn eslint"
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true",
+      "pre-commit": "yarn lint-staged && yarn test",
+      "pre-push": "yarn tsc && yarn lint --quiet && yarn test"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

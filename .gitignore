@@ -1,0 +1,22 @@
+package-lock.json
+
+# OSX
+#
+.DS_Store
+
+# node.js
+#
+**node_modules**
+npm-debug.log
+yarn-error.log
+
+dist
+.vscode/
+.history/
+coverage
+
+.idea/
+
+**.env**
+
+**pods**
