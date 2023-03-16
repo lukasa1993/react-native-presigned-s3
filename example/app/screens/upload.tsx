@@ -14,16 +14,11 @@ export default function UploadScreen() {
       const img = await ImagePicker.openPicker({
         mediaType: 'photo',
       });
-      console.log(img);
-      addUpload(
-        `tmp/${nanoid(5)}.${img.mime === 'image/png' ? 'png' : 'jpeg'}`,
-        img.path,
-        {
-          // extra: {'x-amz-ssf': 'kkf'},
-          payload: {a: 'b'},
-          type: img.mime,
-        },
-      );
+
+      addUpload(`home/${nanoid(5)}_${img.filename}`, img.path, {
+        payload: {a: 'b'},
+        type: img.mime,
+      });
     },
   });
 
@@ -31,7 +26,7 @@ export default function UploadScreen() {
     <SafeAreaView
       style={{flex: 1, alignItems: 'center', justifyContent: 'flex-start'}}>
       <TouchableOpacity
-        disabled={!upload.isIdle}
+        disabled={upload.isLoading}
         onPress={() => upload.mutateAsync()}>
         <Text>Pick Image</Text>
       </TouchableOpacity>

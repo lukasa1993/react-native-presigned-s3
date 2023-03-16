@@ -1,7 +1,6 @@
 import {check_response, endpoint, header} from './api';
 
 export const create = async (payload: any) => {
-  console.log({payload})
   const res = await fetch(`${await endpoint()}/create`, {
     headers: await header(),
     method: 'post',

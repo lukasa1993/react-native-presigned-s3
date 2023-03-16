@@ -17,3 +17,12 @@ jspm_packages
 .github/
 docs/
 example/
+src/
+.prettierrc
+babel.config.js
+CHANGELOG.md
+README.md
+tsconfig.json
+.gitattributes
+.gitignore
+.eslintrc

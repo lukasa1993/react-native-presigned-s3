@@ -34,7 +34,7 @@ export class S3Client {
   }
 
   addUpload(key: string, filePath: string, meta?: any) {
-    this.uploader.add(key, filePath, meta)
+    return this.uploader.add(key, filePath, meta)
   }
 
   addDownload(key: string) {

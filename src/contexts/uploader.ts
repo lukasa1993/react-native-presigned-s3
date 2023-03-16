@@ -8,6 +8,7 @@ export default class Uploader {
   protected s3Handlers: S3Handlers
 
   protected config: S3ClientConfig
+
   constructor(s3Handlers: S3Handlers, config: S3ClientConfig = defaultConfig) {
     this.uploads = {}
     this.s3Handlers = s3Handlers
@@ -15,6 +16,7 @@ export default class Uploader {
   }
 
   async init() {}
+
   async add(key: string, filePath: string, meta?: { payload: any; extra: any; type: string }) {
     const { extra, payload, type } = meta || { payload: {}, extra: {}, type: 'binary/octet-stream' }
 
@@ -30,7 +32,6 @@ export default class Uploader {
     const options: MultipartUploadOptions = {
       url,
       path: Platform.OS === 'ios' ? `file://${filePath}` : filePath,
-      // path: filePath,
       method: 'POST',
       type: 'multipart',
       field: 'file',
@@ -49,17 +50,20 @@ export default class Uploader {
       appGroup: 'group.com.example.app',
     }
 
-    console.log({ options })
-
     try {
       this.uploads[key].uploadId = await Upload.startUpload(options)
     } catch (e) {
       console.error(e)
     }
-    console.log(this.uploads[key])
+
+    Upload.addListener('progress', this.uploads[key].uploadId, (data) => {
+      console.log('p', data)
+    })
+
     Upload.addListener('error', this.uploads[key].uploadId, (data) => {
       console.log('e', data)
     })
+
     Upload.addListener('completed', this.uploads[key].uploadId, (data) => {
       console.log('c', data)
     })
