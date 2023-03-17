@@ -1,3 +1,4 @@
+
 export const prettyBytes = (num: number, precision = 3, addSpace = true) => {
   const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   if (Math.abs(num) < 1) {

@@ -4,20 +4,23 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import FileViewer from 'react-native-file-viewer';
 import {prettyBytes} from '../utils/utils';
 import {useList} from 'react-native-presigned-s3';
-import {useQueryClient} from '@tanstack/react-query';
+
 // @ts-ignore
 import path from 'path-browserify';
 
 export default function FileRow({
   name,
   url,
+  type,
   meta,
+  progress,
 }: {
   name: string;
   url: string;
+  type?: string;
+  progress?: number;
   meta: any;
 }) {
-  const queryClient = useQueryClient();
   const {params} = useRoute();
   const navigation = useNavigation();
   const {removeFile} = useList();
@@ -45,10 +48,7 @@ export default function FileRow({
     Alert.alert(`Deleting ${name}?`, filePath, [
       {
         text: 'I am Sure',
-        onPress: () =>
-          removeFile(filePath).then(() => {
-            return queryClient.invalidateQueries(['list', current_path]);
-          }),
+        onPress: () => removeFile(filePath),
         style: 'destructive',
       },
       {
@@ -57,7 +57,7 @@ export default function FileRow({
         style: 'cancel',
       },
     ]);
-  }, [current_path, name, queryClient, removeFile]);
+  }, [current_path, name, removeFile]);
 
   return (
     <TouchableOpacity onPress={onClick} onLongPress={onLong}>
@@ -78,7 +78,15 @@ export default function FileRow({
             {meta?.isFolder ? '📁 ' : ''}
             {name}
           </Text>
-          <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size)}</Text>
+          {!progress && (
+            <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size)}</Text>
+          )}
+          {progress && (
+            <Text>
+              {parseFloat(String(progress)).toFixed(2)}%{' '}
+              {type === 'uploading' ? '↑' : '↓'}
+            </Text>
+          )}
         </View>
       </View>
     </TouchableOpacity>

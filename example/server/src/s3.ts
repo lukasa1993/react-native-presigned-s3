@@ -160,7 +160,6 @@ class S3 {
       console.log('cant_command', Prefix, this.bucket, e)
       return null
     }
-
     const folders = await pMap(Folders || [], (folder) => {
       return {
         key: folder.Prefix,

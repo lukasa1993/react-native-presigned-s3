@@ -1,17 +1,19 @@
 import {useRoute} from '@react-navigation/native';
-import {useQuery} from '@tanstack/react-query';
-import {list} from '../utils/files';
 import {FlatList, RefreshControl, Text, View} from 'react-native';
 import FileRow from '../componenets/fileRow';
+import {useList} from 'react-native-presigned-s3';
+import {useMemo} from 'react';
 
 export default function ListScreen() {
   const {params} = useRoute();
   // @ts-ignore
   const current_path = params!.path;
-  const {data, isFetching, refetch} = useQuery(['list', current_path], () => {
-    console.log('rrr',['list', current_path]);
-    return list(current_path);
-  });
+  const {files, downloads, uploads, reload, loading} = useList(current_path);
+
+  const data = useMemo(
+    () => [...files, ...downloads, ...uploads],
+    [downloads, files, uploads],
+  );
 
   return (
     <View
@@ -26,14 +28,20 @@ export default function ListScreen() {
           <RefreshControl
             tintColor={'black'}
             colors={['black']}
-            refreshing={isFetching}
-            onRefresh={refetch}
+            refreshing={loading}
+            onRefresh={reload}
           />
         }
         data={data}
         keyExtractor={item => item.key}
         renderItem={({item}) => (
-          <FileRow name={item.key} meta={item.meta} url={item.url} />
+          <FileRow
+            name={item.key}
+            meta={item.meta}
+            url={item.url}
+            progress={item.progress}
+            type={item.type}
+          />
         )}
       />
     </View>

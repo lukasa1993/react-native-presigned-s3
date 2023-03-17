@@ -4,15 +4,20 @@ import Upload, { MultipartUploadOptions } from 'react-native-background-upload'
 
 export default class Uploader {
   protected uploads: any
-  protected queue: any
   protected s3Handlers: S3Handlers
 
   protected config: S3ClientConfig
+  protected notify: (key: string, data: any) => void
 
-  constructor(s3Handlers: S3Handlers, config: S3ClientConfig = defaultConfig) {
+  constructor(
+    s3Handlers: S3Handlers,
+    config: S3ClientConfig = defaultConfig,
+    notify: (key: string, data: any) => void
+  ) {
     this.uploads = {}
     this.s3Handlers = s3Handlers
     this.config = config
+    this.notify = notify
   }
 
   async init() {}
@@ -24,6 +29,7 @@ export default class Uploader {
       key,
       filePath,
       meta,
+      type: 'uploading',
     }
     const s3Params = await this.s3Handlers.create({ key, type: type })
     const url = s3Params.url
@@ -57,19 +63,46 @@ export default class Uploader {
     }
 
     Upload.addListener('progress', this.uploads[key].uploadId, (data) => {
-      console.log('p', data)
+      this.uploads[key].progress = data.progress
+      this.notify(key, {
+        type: 'progress',
+        data: this.uploads[key],
+      })
     })
 
-    Upload.addListener('error', this.uploads[key].uploadId, (data) => {
-      console.log('e', data)
+    Upload.addListener('error', this.uploads[key].uploadId, (err) => {
+      this.uploads[key].error = err
+      const data = { ...this.uploads[key] }
+      delete this.uploads[key]
+      this.notify(key, {
+        type: 'error',
+        data,
+      })
     })
 
-    Upload.addListener('completed', this.uploads[key].uploadId, (data) => {
-      console.log('c', data)
+    Upload.addListener('completed', this.uploads[key].uploadId, (res) => {
+      this.uploads[key].response = res
+      const data = { ...this.uploads[key] }
+      delete this.uploads[key]
+      this.notify(key, {
+        type: 'completed',
+        data,
+      })
     })
   }
 
   cancel(key: string) {
     return Upload.cancelUpload(this.uploads?.[key]?.uploadId)
+  }
+
+  list(prefix: string) {
+    const files = []
+
+    for (const downloadKey in this.uploads) {
+      if (`${downloadKey}`.startsWith(prefix)) {
+        files.push(this.uploads[downloadKey])
+      }
+    }
+    return files
   }
 }
