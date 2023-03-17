@@ -1,5 +1,7 @@
 import { defaultConfig, S3ClientConfig, S3Handlers } from './S3Client'
-
+import RNFS from 'react-native-fs'
+// @ts-ignore
+import path from 'path-browserify'
 export default class Downloader {
   protected downloads: any
 
@@ -19,10 +21,43 @@ export default class Downloader {
   }
 
   async init() {}
-  add(key: string) {
+  async add(key: string, filePath: string) {
+    const { uri, meta } = await this.s3Handlers.get(key)
     this.downloads[key] = {
       key,
+      filePath,
+      meta,
+      type: 'downloading',
     }
+
+    await RNFS.mkdir(path.dirname(filePath))
+
+    const { jobId, promise: downloader } = RNFS.downloadFile({
+      fromUrl: uri,
+      toFile: filePath,
+      cacheable: false,
+      background: true,
+      discretionary: false,
+      begin: () => {
+        this.downloads[key].progress = 0
+        this.notify(key, { type: 'downloading' })
+      },
+      progress: (p) => {
+        this.downloads[key].progress = (p.bytesWritten * 100) / p.contentLength
+        this.notify(key, { type: 'progress', data: this.downloads[key] })
+      },
+    })
+    this.downloads[key].downloadId = jobId
+    let data
+    try {
+      this.downloads[key].response = await downloader
+      data = { ...this.downloads[key] }
+    } catch (e) {
+      this.downloads[key].error = e
+      data = { ...this.downloads[key] }
+    }
+    delete this.downloads[key]
+    this.notify(key, { type: 'completed', data })
   }
 
   list(prefix: string) {

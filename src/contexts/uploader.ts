@@ -98,9 +98,9 @@ export default class Uploader {
   list(prefix: string) {
     const files = []
 
-    for (const downloadKey in this.uploads) {
-      if (`${downloadKey}`.startsWith(prefix)) {
-        files.push(this.uploads[downloadKey])
+    for (const uploadKey in this.uploads) {
+      if (`${uploadKey}`.startsWith(prefix)) {
+        files.push(this.uploads[uploadKey])
       }
     }
     return files

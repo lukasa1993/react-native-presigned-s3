@@ -21,8 +21,8 @@ export function useList(path?: string) {
     if (!path) {
       return () => null
     }
-    const lid = s3Client.addListener(path, (_: string, { type }: { type: string }) => {
-      if (type === 'completed' || type === 'removed') {
+    const lid = s3Client.addListener(path, (_: string, { type, data }: { type: string; data: { type: string } }) => {
+      if ((type === 'completed' && data.type === 'uploading') || type === 'removed') {
         run().catch((e) => console.error(e))
       }
       setActiveList(s3Client.activeList(path))

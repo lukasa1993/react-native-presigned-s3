@@ -11,9 +11,12 @@ export const create = async (payload: any) => {
 };
 
 export const get = async (key: string) => {
-  const res = await fetch(`${await endpoint()}/${key}`, {
-    headers: await header(),
-  });
+  const res = await fetch(
+    `${await endpoint()}/?key=${encodeURIComponent(key)}`,
+    {
+      headers: await header(),
+    },
+  );
 
   return check_response(res);
 };

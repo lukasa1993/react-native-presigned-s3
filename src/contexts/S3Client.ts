@@ -1,5 +1,6 @@
 import Uploader from './uploader'
 import Downloader from './downloader'
+import RNFS from 'react-native-fs'
 
 export type S3Handlers = {
   create: (payload: any) => Promise<any>
@@ -8,9 +9,13 @@ export type S3Handlers = {
   get: (key: string) => Promise<any>
 }
 
-export type S3ClientConfig = {}
+export type S3ClientConfig = {
+  directory: string
+}
 
-export const defaultConfig: S3ClientConfig = {}
+export const defaultConfig: S3ClientConfig = {
+  directory: 'ps3_dl',
+}
 
 export class S3Client {
   protected listeners: any
@@ -30,10 +35,11 @@ export class S3Client {
     this.uploader = new Uploader(s3Handlers, config, this.notify.bind(this))
     this.downloader = new Downloader(s3Handlers, config, this.notify.bind(this))
 
-    setImmediate(() => this.init())
+    setImmediate(this.init.bind(this))
   }
 
   async init() {
+    await RNFS.mkdir(this.localPath(''))
     await this.uploader.init()
     await this.downloader.init()
   }
@@ -43,7 +49,15 @@ export class S3Client {
   }
 
   addDownload(key: string) {
-    this.downloader.add(key)
+    return this.downloader.add(key, this.localPath(key))
+  }
+
+  localPath(key: string) {
+    return `${RNFS.CachesDirectoryPath}/${this.config.directory}/${key}`
+  }
+
+  async existsLocal(key: string) {
+    return await RNFS.exists(this.localPath(key))
   }
 
   async remove(key: string) {

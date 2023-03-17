@@ -8,12 +8,9 @@ export default function ListScreen() {
   const {params} = useRoute();
   // @ts-ignore
   const current_path = params!.path;
-  const {files, downloads, uploads, reload, loading} = useList(current_path);
+  const {files, uploads, reload, loading} = useList(current_path);
 
-  const data = useMemo(
-    () => [...files, ...downloads, ...uploads],
-    [downloads, files, uploads],
-  );
+  const data = useMemo(() => [...uploads, ...files], [files, uploads]);
 
   return (
     <View
@@ -38,7 +35,6 @@ export default function ListScreen() {
           <FileRow
             name={item.key}
             meta={item.meta}
-            url={item.url}
             progress={item.progress}
             type={item.type}
           />

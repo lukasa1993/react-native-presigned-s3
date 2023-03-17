@@ -1,54 +1,75 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {View, Text, TouchableOpacity, Alert} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import FileViewer from 'react-native-file-viewer';
 import {prettyBytes} from '../utils/utils';
-import {useList} from 'react-native-presigned-s3';
+import {useList, useDownloader} from 'react-native-presigned-s3';
 
 // @ts-ignore
 import path from 'path-browserify';
 
 export default function FileRow({
   name,
-  url,
   type,
   meta,
-  progress,
+  progress: _progress,
 }: {
   name: string;
-  url: string;
   type?: string;
   progress?: number;
   meta: any;
 }) {
-  const {params} = useRoute();
   const navigation = useNavigation();
-  const {removeFile} = useList();
-
+  const {params} = useRoute();
   // @ts-ignore
   const current_path = params!.path;
+  const fileKey = path.join(current_path, name);
+
+  const {removeFile, downloads} = useList(current_path);
+  const {localPath, addDownload} = useDownloader(fileKey);
+
+  const [openAfterDownload, setOpenAfterDownload] = useState(false);
+
+  const progress = useMemo(() => {
+    if (`${downloads?.[0]?.key}`.endsWith(name)) {
+      return downloads?.[0]?.progress || _progress || null;
+    }
+    return _progress || null;
+  }, [downloads, name, _progress]);
 
   const onClick = useCallback(() => {
-    if (meta.isFolder) {
+    if (meta?.isFolder) {
       // @ts-ignore
       return navigation.push('List', {
         // @ts-ignore
-        path: `${meta.path}`,
+        path: `${meta?.path}`,
       });
     } else {
-      return FileViewer.open(url, {
-        showOpenWithDialog: true,
-      });
+      if (localPath) {
+        return FileViewer.open(localPath, {
+          showOpenWithDialog: true,
+        });
+      } else {
+        setOpenAfterDownload(true);
+        return addDownload(fileKey);
+      }
     }
-  }, [meta.isFolder, meta.path, navigation, url]);
+  }, [addDownload, fileKey, localPath, meta?.isFolder, meta?.path, navigation]);
+
+  useEffect(() => {
+    if (openAfterDownload && localPath) {
+      setOpenAfterDownload(false);
+      FileViewer.open(localPath, {
+        showOpenWithDialog: true,
+      }).catch(e => console.error(e));
+    }
+  }, [localPath, openAfterDownload]);
 
   const onLong = useCallback(() => {
-    const filePath = path.join(current_path, name);
-
-    Alert.alert(`Deleting ${name}?`, filePath, [
+    Alert.alert(`Deleting ${name}?`, fileKey, [
       {
         text: 'I am Sure',
-        onPress: () => removeFile(filePath),
+        onPress: () => removeFile(fileKey),
         style: 'destructive',
       },
       {
@@ -57,7 +78,7 @@ export default function FileRow({
         style: 'cancel',
       },
     ]);
-  }, [current_path, name, removeFile]);
+  }, [fileKey, name, removeFile]);
 
   return (
     <TouchableOpacity onPress={onClick} onLongPress={onLong}>
@@ -81,9 +102,9 @@ export default function FileRow({
           {!progress && (
             <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size)}</Text>
           )}
-          {progress && (
+          {!!progress && (
             <Text>
-              {parseFloat(String(progress)).toFixed(2)}%{' '}
+              {parseFloat(`${progress}`).toFixed(2)}%{' '}
               {type === 'uploading' ? '↑' : '↓'}
             </Text>
           )}

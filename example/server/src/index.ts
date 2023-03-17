@@ -28,11 +28,14 @@ app.get('/list', async (req, res) => {
   }
 })
 
-app.get('/:key', async (req, res) => {
+app.get('/', async (req, res) => {
   try {
-    res.send(await s3.get(req.params.key))
+    res.send({
+      uri: await s3.get(req.query.key),
+      meta: await s3.meta(req.query.key),
+    })
   } catch (e) {
-    console.error('Key Error', req.params, e)
+    console.error('Key Error', req.query, e)
     res.sendStatus(400)
   }
 })
@@ -41,7 +44,7 @@ app.delete('/', async (req, res) => {
   try {
     res.send(await s3.remove(decodeURIComponent(`${req.body.key}`)))
   } catch (e) {
-    console.error('Delete Error', req.params, e)
+    console.error('Delete Error', req.body, e)
     res.sendStatus(400)
   }
 })
