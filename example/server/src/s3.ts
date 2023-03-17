@@ -11,7 +11,7 @@ import pMap from 'p-map'
 import crypto from 'crypto'
 import path from 'path'
 import { Conditions as PolicyEntry } from '@aws-sdk/s3-presigned-post/dist-types/types'
-import { _Object } from '@aws-sdk/client-s3/dist-types/models/models_0'
+import { _Object, CommonPrefix } from '@aws-sdk/client-s3/dist-types/models/models_0'
 import { config } from 'dotenv'
 
 config()
@@ -144,38 +144,48 @@ class S3 {
     return await this.s3.send(command)
   }
 
-  async list(Prefix, { url = false, meta = false } = {}) {
+  async list(Prefix) {
     let Contents: _Object[] | null = null
-
+    let Folders: CommonPrefix[] | null = null
     const command = new ListObjectsCommand({
       Prefix,
       Bucket: this.bucket,
+      Delimiter: '/',
     })
     try {
       const _command = await this.s3.send(command)
+      Folders = _command.CommonPrefixes
       Contents = _command.Contents
     } catch (e) {
       console.log('cant_command', Prefix, this.bucket, e)
       return null
     }
 
+    const folders = await pMap(Folders || [], (folder) => {
+      return {
+        key: folder.Prefix,
+        meta: {
+          isFolder: true,
+          path: folder.Prefix,
+          size: 0,
+        },
+      }
+    })
+
     const list =
       (await pMap(Contents || [], async (content) => {
         let _url = null
         let _meta = null
-        if (!!url) {
-          try {
-            _url = await this.get(content.Key)
-          } catch (e) {
-            console.log('cant_url', content.Key, e)
-          }
+        try {
+          _url = await this.get(content.Key)
+        } catch (e) {
+          console.log('cant_url', content.Key, e)
         }
-        if (!!meta) {
-          try {
-            _meta = await this.meta(content.Key)
-          } catch (e) {
-            console.log('cant_meta', content.Key, e)
-          }
+
+        try {
+          _meta = await this.meta(content.Key)
+        } catch (e) {
+          console.log('cant_meta', content.Key, e)
         }
 
         return {
@@ -186,7 +196,7 @@ class S3 {
         }
       })) || []
 
-    return list.filter((f) => !!f)
+    return [...folders, ...list.filter((f) => !!f)]
   }
 }
 

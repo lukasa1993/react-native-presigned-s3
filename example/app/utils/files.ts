@@ -19,18 +19,22 @@ export const get = async (key: string) => {
 };
 
 export const remove = async (key: string) => {
-  const res = await fetch(`${await endpoint()}/${key}`, {
+  const res = await fetch(`${await endpoint()}/`, {
     method: 'DELETE',
     headers: await header(),
+    body: JSON.stringify({key}),
   });
 
   return check_response(res);
 };
 
 export const list = async (prefix: string) => {
-  const res = await fetch(`${await endpoint()}/files/${prefix}`, {
-    headers: await header(),
-  });
+  const res = await fetch(
+    `${await endpoint()}/list?prefix=${encodeURIComponent(prefix)}`,
+    {
+      headers: await header(),
+    },
+  );
 
   return check_response(res);
 };

@@ -19,6 +19,15 @@ app.post('/create', async (req, res) => {
   }
 })
 
+app.get('/list', async (req, res) => {
+  try {
+    res.send(await s3.list(decodeURIComponent(`${req.query.prefix}`)))
+  } catch (e) {
+    console.error('list Error', req.params, e)
+    res.sendStatus(400)
+  }
+})
+
 app.get('/:key', async (req, res) => {
   try {
     res.send(await s3.get(req.params.key))
@@ -27,18 +36,10 @@ app.get('/:key', async (req, res) => {
     res.sendStatus(400)
   }
 })
-app.get('/list/:prefix', async (req, res) => {
-  try {
-    res.send(await s3.list(req.params.prefix))
-  } catch (e) {
-    console.error('list Error', req.params, e)
-    res.sendStatus(400)
-  }
-})
 
-app.delete('/:key', async (req, res) => {
+app.delete('/', async (req, res) => {
   try {
-    res.send(await s3.remove(req.params.key))
+    res.send(await s3.remove(decodeURIComponent(`${req.body.key}`)))
   } catch (e) {
     console.error('Delete Error', req.params, e)
     res.sendStatus(400)

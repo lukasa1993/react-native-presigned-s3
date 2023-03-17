@@ -40,4 +40,8 @@ export class S3Client {
   addDownload(key: string) {
     this.downloader.add(key)
   }
+
+  remove(key: string) {
+    return this.s3Handlers.remove(key)
+  }
 }

@@ -14,7 +14,9 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => {
             // @ts-ignore
-            navigate('List');
+            navigate('List', {
+              path: 'home',
+            });
           }}>
           <View>
             <Text>List</Text>
