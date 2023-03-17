@@ -1,14 +1,17 @@
-import { defaultConfig, S3ClientConfig, S3Handlers } from './S3Client'
+import { defaultConfig } from './S3Client'
 import RNFS from 'react-native-fs'
 // @ts-ignore
 import path from 'path-browserify'
+import { notifyCB, S3ClientConfig, S3Handlers, S3Item, S3ItemStorage } from '../types'
+
 export default class Downloader {
-  protected downloads: any
+  protected downloads: S3ItemStorage
 
   protected s3Handlers: S3Handlers
 
   protected config: S3ClientConfig
-  protected notify: (key: string, data: any) => void
+  protected notify: notifyCB
+
   constructor(
     s3Handlers: S3Handlers,
     config: S3ClientConfig = defaultConfig,
@@ -21,13 +24,15 @@ export default class Downloader {
   }
 
   async init() {}
+
   async add(key: string, filePath: string) {
     const { uri, meta } = await this.s3Handlers.get(key)
     this.downloads[key] = {
       key,
+      name: path.basename(key),
       filePath,
       meta,
-      type: 'downloading',
+      state: 'downloading',
     }
 
     await RNFS.mkdir(path.dirname(filePath))
@@ -40,14 +45,14 @@ export default class Downloader {
       discretionary: false,
       begin: () => {
         this.downloads[key].progress = 0
-        this.notify(key, { type: 'downloading' })
+        this.notify(key, 'add', this.downloads[key])
       },
       progress: (p) => {
         this.downloads[key].progress = (p.bytesWritten * 100) / p.contentLength
-        this.notify(key, { type: 'progress', data: this.downloads[key] })
+        this.notify(key, 'progress', this.downloads[key])
       },
     })
-    this.downloads[key].downloadId = jobId
+    this.downloads[key].downloadId = `${jobId}`
     let data
     try {
       this.downloads[key].response = await downloader
@@ -57,17 +62,18 @@ export default class Downloader {
       data = { ...this.downloads[key] }
     }
     delete this.downloads[key]
-    this.notify(key, { type: 'completed', data })
+    this.notify(key, data.error ? 'error' : 'downloaded', data)
   }
 
   list(prefix: string) {
-    const files = []
+    const files: { [key: string]: S3Item } = {}
 
     for (const downloadKey in this.downloads) {
-      if (`${downloadKey}`.startsWith(prefix)) {
-        files.push(this.downloads[downloadKey])
+      if (downloadKey.startsWith(prefix)) {
+        files[downloadKey] = this.downloads[downloadKey]
       }
     }
+
     return files
   }
 }

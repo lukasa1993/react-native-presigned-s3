@@ -2,15 +2,12 @@ import {useRoute} from '@react-navigation/native';
 import {FlatList, RefreshControl, Text, View} from 'react-native';
 import FileRow from '../componenets/fileRow';
 import {useList} from 'react-native-presigned-s3';
-import {useMemo} from 'react';
 
 export default function ListScreen() {
   const {params} = useRoute();
   // @ts-ignore
   const current_path = params!.path;
-  const {files, uploads, reload, loading} = useList(current_path);
-
-  const data = useMemo(() => [...uploads, ...files], [files, uploads]);
+  const {files, loading, reload} = useList(current_path);
 
   return (
     <View
@@ -29,16 +26,9 @@ export default function ListScreen() {
             onRefresh={reload}
           />
         }
-        data={data}
+        data={files}
         keyExtractor={item => item.key}
-        renderItem={({item}) => (
-          <FileRow
-            name={item.key}
-            meta={item.meta}
-            progress={item.progress}
-            type={item.type}
-          />
-        )}
+        renderItem={({item}) => <FileRow fileKey={item.key} {...item} />}
       />
     </View>
   );

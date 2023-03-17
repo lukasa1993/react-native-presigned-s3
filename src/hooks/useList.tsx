@@ -1,37 +1,41 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useS3Client } from '../contexts/PS3Context'
-import { useAsync } from '../utils'
+import { S3Item, useListParams } from '../types'
 
-export function useList(path?: string) {
+export function useList(path: string, params: useListParams = { mountReload: true, progress: false }) {
   const s3Client = useS3Client()
 
-  const { value, run, loading } = useAsync(() => (path ? s3Client.list(path) : []))
-  const files = value || []
-  const [{ downloads, uploads }, setActiveList] = useState(
-    path ? s3Client.activeList(path) : { downloads: [], uploads: [] }
+  const [files, setFiles] = useState<S3Item[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const reload = useCallback(
+    (r: boolean = true) => {
+      setLoading(true)
+      s3Client.list(path, r).catch((e) => console.log(e))
+    },
+    [path, s3Client]
   )
 
   useEffect(() => {
-    if (path) {
-      run().catch((e) => console.error(e))
-    }
-  }, [path, run])
+    reload(params.mountReload)
+  }, [params.mountReload, reload])
 
   useEffect(() => {
-    if (!path) {
-      return () => null
-    }
-    const lid = s3Client.addListener(path, (_: string, { type, data }: { type: string; data: { type: string } }) => {
-      if ((type === 'completed' && data.type === 'uploading') || type === 'removed') {
-        run().catch((e) => console.error(e))
+    const lid = s3Client.addListener(path, (_key, type, list) => {
+      setLoading(false)
+      if (type === 'progress') {
+        if (params.progress) {
+          setFiles(list)
+        }
+      } else {
+        setFiles(list)
       }
-      setActiveList(s3Client.activeList(path))
     })
 
     return () => {
       s3Client.removeListener(lid)
     }
-  }, [path, run, s3Client])
+  }, [path, params.progress, s3Client])
 
   const removeFile = useCallback(
     (key: string) => {
@@ -39,13 +43,25 @@ export function useList(path?: string) {
     },
     [s3Client]
   )
+  const addUpload = useCallback(
+    (key: string, filePath: string, meta: any) => {
+      return s3Client.addUpload(key, filePath, meta)
+    },
+    [s3Client]
+  )
+  const addDownload = useCallback(
+    (key: string) => {
+      return s3Client.addDownload(key)
+    },
+    [s3Client]
+  )
 
   return {
     files,
-    downloads,
-    uploads,
-    reload: run,
     loading,
+    reload,
     removeFile,
+    addUpload,
+    addDownload,
   }
 }

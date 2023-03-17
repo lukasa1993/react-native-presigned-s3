@@ -1,41 +1,33 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {View, Text, TouchableOpacity, Alert} from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import FileViewer from 'react-native-file-viewer';
 import {prettyBytes} from '../utils/utils';
-import {useList, useDownloader} from 'react-native-presigned-s3';
-
-// @ts-ignore
-import path from 'path-browserify';
+import {useList} from 'react-native-presigned-s3';
+import type {S3Item} from 'react-native-presigned-s3';
 
 export default function FileRow({
+  fileKey: key,
   name,
-  type,
+  filePath,
+  existsLocally,
+  state: type,
   meta,
-  progress: _progress,
-}: {
-  name: string;
-  type?: string;
-  progress?: number;
-  meta: any;
-}) {
+}: S3Item & {fileKey: string}) {
   const navigation = useNavigation();
-  const {params} = useRoute();
-  // @ts-ignore
-  const current_path = params!.path;
-  const fileKey = path.join(current_path, name);
+  const {removeFile, files, addDownload} = useList(key, {
+    mountReload: false,
+    progress: true,
+  });
 
-  const {removeFile, downloads} = useList(current_path);
-  const {localPath, addDownload} = useDownloader(fileKey);
+  const file = useMemo(() => files[0] || {}, [files]);
+  const pathFile = file.filePath || filePath;
+  const locallyExists = file.existsLocally || existsLocally;
+  console.log(key, {files});
 
   const [openAfterDownload, setOpenAfterDownload] = useState(false);
 
-  const progress = useMemo(() => {
-    if (`${downloads?.[0]?.key}`.endsWith(name)) {
-      return downloads?.[0]?.progress || _progress || null;
-    }
-    return _progress || null;
-  }, [downloads, name, _progress]);
+  const progress = file?.progress;
 
   const onClick = useCallback(() => {
     if (meta?.isFolder) {
@@ -45,31 +37,39 @@ export default function FileRow({
         path: `${meta?.path}`,
       });
     } else {
-      if (localPath) {
-        return FileViewer.open(localPath, {
+      if (pathFile && locallyExists) {
+        return FileViewer.open(pathFile, {
           showOpenWithDialog: true,
         });
       } else {
         setOpenAfterDownload(true);
-        return addDownload(fileKey);
+        return addDownload(key);
       }
     }
-  }, [addDownload, fileKey, localPath, meta?.isFolder, meta?.path, navigation]);
+  }, [
+    meta?.isFolder,
+    meta?.path,
+    navigation,
+    pathFile,
+    locallyExists,
+    addDownload,
+    key,
+  ]);
 
   useEffect(() => {
-    if (openAfterDownload && localPath) {
+    if (openAfterDownload && pathFile && locallyExists) {
       setOpenAfterDownload(false);
-      FileViewer.open(localPath, {
+      FileViewer.open(pathFile, {
         showOpenWithDialog: true,
       }).catch(e => console.error(e));
     }
-  }, [localPath, openAfterDownload]);
+  }, [locallyExists, pathFile, openAfterDownload]);
 
   const onLong = useCallback(() => {
-    Alert.alert(`Deleting ${name}?`, fileKey, [
+    Alert.alert(`Deleting ${name}?`, key, [
       {
         text: 'I am Sure',
-        onPress: () => removeFile(fileKey),
+        onPress: () => removeFile(key),
         style: 'destructive',
       },
       {
@@ -78,7 +78,7 @@ export default function FileRow({
         style: 'cancel',
       },
     ]);
-  }, [fileKey, name, removeFile]);
+  }, [key, name, removeFile]);
 
   return (
     <TouchableOpacity onPress={onClick} onLongPress={onLong}>
@@ -100,7 +100,7 @@ export default function FileRow({
             {name}
           </Text>
           {!progress && (
-            <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size)}</Text>
+            <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size || 0)}</Text>
           )}
           {!!progress && (
             <Text>

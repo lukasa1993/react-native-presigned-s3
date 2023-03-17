@@ -4,17 +4,17 @@ import {useMutation} from '@tanstack/react-query';
 import {Text, TouchableOpacity} from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import {nanoid} from 'nanoid/non-secure';
-import {useUploader} from 'react-native-presigned-s3';
+import {useList} from 'react-native-presigned-s3';
 import {useNavigation, useRoute} from '@react-navigation/native';
 // @ts-ignore
 import path from 'path-browserify';
 export default function UploadScreen() {
   const navigation = useNavigation();
   const {params} = useRoute();
-  const {addUpload} = useUploader();
 
   // @ts-ignore
   const current_path = params!.path;
+  const {addUpload} = useList(current_path);
 
   const upload = useMutation({
     mutationKey: ['upload'],
@@ -24,12 +24,12 @@ export default function UploadScreen() {
       });
       // @ts-ignore
       const key = path.join(current_path, `${nanoid(5)}_${img.filename}`);
-      console.log({key});
 
-      return addUpload(key, img.path, {
+      addUpload(key, img.path, {
         payload: {a: 'b'},
         type: img.mime,
-      }).then(() => navigation.goBack());
+      });
+      navigation.goBack();
     },
   });
 
