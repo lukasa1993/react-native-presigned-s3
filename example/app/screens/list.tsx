@@ -2,10 +2,10 @@ import {useRoute} from '@react-navigation/native';
 import {FlatList, RefreshControl, Text, View} from 'react-native';
 import FileRow from '../componenets/fileRow';
 import {useList} from 'react-native-presigned-s3';
-import {useMemo} from 'react';
+import React, {useMemo} from 'react';
+import FolderRow from '../componenets/folderRow';
 // @ts-ignore
 import path from 'path-browserify';
-import FolderRow from '../componenets/folderRow';
 export default function ListScreen() {
   const {params} = useRoute();
   // @ts-ignore
@@ -33,7 +33,7 @@ export default function ListScreen() {
         }),
     [current_path, files],
   );
-console.log(current_path,files.map(f=>f.key))
+
   return (
     <View
       style={{

@@ -1,15 +1,16 @@
 import RNFS from 'react-native-fs'
-import { notifyCB, S3ClientConfig, S3Handlers, S3Item } from '../types'
+import { S3ClientConfig, S3Handlers, S3Item } from '../types'
 import { confirmHash, localPath, makeDir } from './fs'
+import InternalListener from './listener'
 
 export async function downloadHandler({
   system,
   item,
 }: {
-  system: { config: S3ClientConfig; s3Handlers: S3Handlers; notify: notifyCB }
+  system: { config: S3ClientConfig; s3Handlers: S3Handlers; internalListener: InternalListener }
   item: S3Item
 }) {
-  const { config, s3Handlers, notify } = system
+  const { config, s3Handlers, internalListener } = system
   const key = item.key
   const filePath = localPath(key, config.directory)
   await makeDir(filePath)
@@ -20,14 +21,8 @@ export async function downloadHandler({
     cacheable: false,
     background: true,
     discretionary: false,
-    begin: () => {
-      item.progress = 0
-      notify(key, 'add', item)
-    },
-    progress: (p) => {
-      item.progress = (p.bytesWritten * 100) / p.contentLength
-      notify(key, 'progress', item)
-    },
+    begin: internalListener.downloadStarted(key, item),
+    progress: internalListener.downloadProgress(key, item),
   })
   item.downloadId = `${jobId}`
 
@@ -48,6 +43,7 @@ export async function downloadHandler({
     item.filePath = filePath
     item.progress = undefined
     item.state = 'local'
+    internalListener.downloadCompleted(key, item)()
   } catch (e) {
     console.error(e)
     const { uri, meta } = await s3Handlers.get(key)
@@ -55,11 +51,11 @@ export async function downloadHandler({
     item.error = e
     item.uri = uri
     item.meta = meta || item.meta
-  }
 
-  notify(key, item.error ? 'error' : 'downloaded', item)
+    internalListener.downloadError(key, item)()
+  }
 }
 
 export function cancelDownload(downloadID: string) {
-  return RNFS.stopDownload(Number(downloadID))
+  return RNFS.stopDownload(parseInt(downloadID) > 0 ? parseInt(downloadID) : -1)
 }

@@ -5,7 +5,8 @@ post and get payloads can be mimicked in app as well but not recommended for acc
 server responses please see [example/server](./example/server) and for simple demo app [example/app](./example/app)
 
 ### Sample
-![Example App](./sample.gif)
+
+<img src="sample.gif" width="400" height="855"  alt="sample-app-gif" />
 
 ## Setup
 1. 

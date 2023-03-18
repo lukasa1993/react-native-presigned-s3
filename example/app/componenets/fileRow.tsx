@@ -72,7 +72,6 @@ export default function FileRow({
       },
       {
         text: 'Wopsy',
-        onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
     ]);

@@ -3,12 +3,18 @@ import { S3ClientConfig, S3ItemStorage } from '../types'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export async function store(items: S3ItemStorage, config: S3ClientConfig) {
+  if (!config.shouldPersist) {
+    return
+  }
   const serialized = JSON.stringify(items)
 
   await AsyncStorage.setItem(config.persistKey, serialized)
 }
 
 export async function restore(config: S3ClientConfig): Promise<S3ItemStorage> {
+  if (!config.shouldPersist) {
+    return {}
+  }
   const serialized = await AsyncStorage.getItem(config.persistKey)
   return JSON.parse(serialized)
 }

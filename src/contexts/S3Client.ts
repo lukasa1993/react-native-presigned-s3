@@ -4,14 +4,15 @@ import { cancelUpload, uploadHandler } from '../helper/uploader'
 import { cancelDownload, downloadHandler } from '../helper/downloader'
 import { baseName, confirmHash, existsLocal, localPath, makeDir, pathJoin, removeFile } from '../helper/fs'
 import { restore, store } from '../helper/persistor'
+import InternalListener from '../helper/listener'
 
 export const defaultConfig: S3ClientConfig = {
   directory: 'ps3_dl',
-  localCache: true,
   immediateDownload: true,
   appGroup: '_app_group_needed_',
   retries: 5,
   persistKey: '@p3_storage_key',
+  shouldPersist: true,
 }
 
 export class S3Client {
@@ -23,10 +24,18 @@ export class S3Client {
   protected queue: PQueue
   protected listQueue: PQueue
 
+  protected internalListener: InternalListener
+
   constructor(s3Handlers: S3Handlers, config: S3ClientConfig = defaultConfig) {
     this.listenersIndex = {}
     this.listeners = {}
     this.items = {}
+
+    this.internalListener = new InternalListener({
+      notify: this.notify.bind(this),
+      config,
+      s3Handlers,
+    })
 
     this.config = config
     this.s3Handlers = s3Handlers
@@ -105,6 +114,8 @@ export class S3Client {
         retries: this.config.retries,
         state: 'uploading',
       }
+    } else if (this.items[key].uploadId) {
+      return
     }
 
     this.queue
@@ -114,7 +125,7 @@ export class S3Client {
           system: {
             s3Handlers: this.s3Handlers,
             config: this.config,
-            notify: this.notify.bind(this),
+            internalListener: this.internalListener,
           },
           item: this.items[key],
         })
@@ -127,6 +138,9 @@ export class S3Client {
   }
 
   addDownload(key: string) {
+    if (this.items[key].downloadId) {
+      return
+    }
     this.items[key].state = 'downloading'
 
     this.queue
@@ -136,7 +150,7 @@ export class S3Client {
           system: {
             config: this.config,
             s3Handlers: this.s3Handlers,
-            notify: this.notify.bind(this),
+            internalListener: this.internalListener,
           },
           item: this.items[key],
         })
@@ -147,19 +161,21 @@ export class S3Client {
       })
   }
 
-  async remove(key: string) {
-    try {
-      await cancelDownload(`${this.items[key].downloadId}`)
-    } catch (_) {}
-    try {
-      await cancelUpload(`${this.items[key].uploadId}`)
-    } catch (_) {}
-    try {
-      await this.s3Handlers.remove(key)
-      await removeFile(key, this.config.directory)
-    } catch (_) {}
-    delete this.items[key]
-    this.notify(key, 'remove')
+  remove(key: string) {
+    setImmediate(async () => {
+      try {
+        await cancelDownload(`${this.items[key].downloadId}`)
+      } catch (_) {}
+      try {
+        await cancelUpload(`${this.items[key].uploadId}`)
+      } catch (_) {}
+      try {
+        await this.s3Handlers.remove(key)
+        await removeFile(key, this.config.directory)
+      } catch (_) {}
+      delete this.items[key]
+      this.notify(key, 'remove')
+    })
   }
 
   cancel(key: string) {
@@ -184,28 +200,18 @@ export class S3Client {
         }
         const remotes = await this.s3Handlers.list(prefix)
 
-        let existingFiles = []
+        let existingFiles = new Set()
         for (const remote of remotes) {
-          let item: S3Item
-          if (this.items.hasOwnProperty(remote.key)) {
-            this.items[remote.key].meta = remote.meta
-            this.items[remote.key].uri = remote.url
-            item = this.items[remote.key]
-          } else if (this.items.hasOwnProperty(prefix)) {
-            this.items[prefix].meta = remote.meta
-            this.items[prefix].uri = remote.url
-            item = this.items[prefix]
-          } else {
-            item = {
-              key: remote.Key || pathJoin(prefix, remote.key),
-              name: baseName(remote.Key || remote.key),
-              retries: this.config.retries,
-              meta: remote.meta,
-              uri: remote.url,
-              state: 'remote',
-            }
+          let item: S3Item = this.items[remote.Key] || {
+            key: remote.Key || pathJoin(prefix, remote.key),
+            name: baseName(remote.Key || remote.key),
+            retries: this.config.retries,
+            meta: remote.meta,
+            uri: remote.url,
+            state: 'remote',
           }
-          existingFiles.push(item.key)
+
+          existingFiles.add(item.key)
 
           if (!item.meta?.isFolder && (await existsLocal(item.key, this.config.directory))) {
             let hash = ''
@@ -230,7 +236,7 @@ export class S3Client {
 
         let removedKeys = []
         for (const itemsKey in this.items) {
-          if (itemsKey.startsWith(prefix) && !existingFiles.includes(itemsKey)) {
+          if (itemsKey.startsWith(prefix) && !existingFiles.has(itemsKey)) {
             removedKeys.push(itemsKey)
           }
         }
@@ -285,8 +291,10 @@ export class S3Client {
       this.items[key].retries--
 
       if (this.items[key].state === 'uploading') {
+        this.items[key].uploadId = undefined
         this.addUpload(key, this.items[key].filePath!, this.items[key].meta)
       } else if (this.items[key].state === 'downloading') {
+        this.items[key].downloadId = undefined
         this.addDownload(key)
       }
     }

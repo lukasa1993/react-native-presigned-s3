@@ -1,16 +1,16 @@
 import Upload, { MultipartUploadOptions } from 'react-native-background-upload'
 import { Platform } from 'react-native'
-import { notifyCB, S3ClientConfig, S3Handlers, S3Item } from '../types'
-import { confirmHash, fileStats, localPath, makeDir, moveFile } from './fs'
+import { S3ClientConfig, S3Handlers, S3Item } from '../types'
+import InternalListener from './listener'
 
 export async function uploadHandler({
   system,
   item,
 }: {
-  system: { config: S3ClientConfig; s3Handlers: S3Handlers; notify: notifyCB }
+  system: { config: S3ClientConfig; s3Handlers: S3Handlers; internalListener: InternalListener }
   item: S3Item
 }) {
-  const { config, s3Handlers, notify } = system
+  const { config, s3Handlers, internalListener } = system
   const key = item.key
   const { extra, payload, type } = item.meta || { payload: {}, extra: {}, type: 'binary/octet-stream' }
 
@@ -39,54 +39,21 @@ export async function uploadHandler({
 
   try {
     item.uploadId = await Upload.startUpload(options)
-    notify(key, 'add', item)
+    internalListener.uploadStarted(key, item)
   } catch (e) {
     console.error('create upload error', e)
   }
 
   // @ts-ignore
-  Upload.addListener('progress', item.uploadId, (data) => {
-    item.progress = data.progress
-    notify(key, 'progress', item)
-  })
+  Upload.addListener('progress', item.uploadId, internalListener.uploadProgress(key, item))
 
   // @ts-ignore
-  Upload.addListener('error', item.uploadId, (err) => {
-    item.error = err
-
-    notify(key, 'error', item)
-  })
+  Upload.addListener('error', item.uploadId, internalListener.uploadError(key, item))
 
   // @ts-ignore
-  Upload.addListener('completed', item.uploadId, async (res: any) => {
-    item.response = res
+  Upload.addListener('completed', item.uploadId, internalListener.uploadCompleted(key, item))
 
-    const _localPath = localPath(item.key, config.directory)
-
-    await makeDir(_localPath)
-    await moveFile(item.filePath!, _localPath)
-
-    const stats = await fileStats(_localPath)
-
-    const { meta } = await s3Handlers.get(item.key)
-
-    item.existsLocally = await confirmHash(item.key, config.directory, meta.hash)
-    item.filePath = _localPath
-    item.state = 'local'
-    item.progress = undefined
-    item.meta.size = stats.size
-
-    if (item.existsLocally) {
-      notify(key, 'uploaded', item)
-    } else {
-      item.error = 'Hash Mismatch'
-      notify(key, 'error', item)
-    }
-  })
-
-  Upload.addListener('cancelled', item.uploadId!, () => {
-    notify(key, 'remove', item)
-  })
+  Upload.addListener('cancelled', item.uploadId!, internalListener.uploadCancelled(key, item))
 }
 
 export function cancelUpload(uploadID: string) {
