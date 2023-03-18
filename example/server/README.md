@@ -2,7 +2,7 @@
 
 
 ### Setup
-1. this is for NY DigitalOcean Spaces which is S3 compatible
+1. this is for NY DigitalOcean [Spaces](https://www.digitalocean.com/products/spaces) which is S3 compatible
 2. Setup env
     ```dotenv
     SPACES_KEY={{s3_key}}
