@@ -1,4 +1,5 @@
 #import "AppDelegate.h"
+#import <RNFSManager.h>
 
 #import <React/RCTBundleURLProvider.h>
 
@@ -31,6 +32,11 @@
 - (BOOL)concurrentRootEnabled
 {
   return true;
+}
+
+- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)())completionHandler
+{
+  [RNFSManager setCompletionHandlerForIdentifier:identifier completionHandler:completionHandler];
 }
 
 @end

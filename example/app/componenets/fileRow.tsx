@@ -12,20 +12,20 @@ export default function FileRow({
   filePath,
   existsLocally,
   state: type,
+  progress,
   meta,
 }: S3Item & {fileKey: string}) {
   const navigation = useNavigation();
+  const [openAfterDownload, setOpenAfterDownload] = useState(false);
+
   const {removeFile, files, addDownload} = useList(key, {
     progress: true,
   });
-
   const file = useMemo(() => files[0] || {}, [files]);
+
   const pathFile = file.filePath || filePath;
   const locallyExists = file.existsLocally || existsLocally;
-
-  const [openAfterDownload, setOpenAfterDownload] = useState(false);
-
-  const progress = file?.progress;
+  const fileProgress = file?.progress || progress;
 
   const onClick = useCallback(() => {
     if (meta?.isFolder) {
@@ -97,12 +97,12 @@ export default function FileRow({
             {meta?.isFolder ? '📁 ' : ''}
             {name}
           </Text>
-          {!progress && (
+          {!fileProgress && (
             <Text>{meta?.isFolder ? '' : prettyBytes(meta?.size || 0)}</Text>
           )}
-          {!!progress && (
+          {!!fileProgress && (
             <Text>
-              {parseFloat(`${progress}`).toFixed(2)}%{' '}
+              {parseFloat(`${fileProgress}`).toFixed(2)}%{' '}
               {type === 'uploading' ? '↑' : '↓'}
             </Text>
           )}

@@ -1,6 +1,6 @@
 {
   "name": "react-native-presigned-s3",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Luka Dodelia <luka@picktek.com>",
   "bugs": {
     "email": "luka@picktek.com",
@@ -33,12 +33,12 @@
     "prepare": "yarn build",
     "test": "jest src",
     "test:coverage": "jest --coverage",
-    "sync": "rsync -ah ./src ./example/app/node_modules/react-native-presigned-s3",
     "dev": "cpx \"src/**/*.*\" ./example/app/node_modules/react-native-presigned-s3 --watch",
     "release": "semantic-release"
   },
   "dependencies": {
     "p-map": "5.5.0",
+    "p-queue": "7.3.4",
     "path-browserify": "1.0.1"
   },
   "devDependencies": {

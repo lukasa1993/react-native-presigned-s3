@@ -1,14 +1,17 @@
-import RNFS from 'react-native-fs'
 import { ListenerCB, notifyTypes, S3ClientConfig, S3Handlers, S3Item, S3ItemStorage } from '../types'
-// @ts-ignore
-import path from 'path-browserify'
-import Upload, { MultipartUploadOptions } from 'react-native-background-upload'
-import { Platform } from 'react-native'
+import PQueue from 'p-queue'
+import { cancelUpload, uploadHandler } from '../helper/uploader'
+import { cancelDownload, downloadHandler } from '../helper/downloader'
+import { baseName, confirmHash, existsLocal, localPath, makeDir, pathJoin, removeFile } from '../helper/fs'
+import { restore, store } from '../helper/persistor'
+
 export const defaultConfig: S3ClientConfig = {
   directory: 'ps3_dl',
   localCache: true,
   immediateDownload: true,
   appGroup: '_app_group_needed_',
+  retries: 5,
+  persistKey: '@p3_storage_key',
 }
 
 export class S3Client {
@@ -16,8 +19,9 @@ export class S3Client {
   protected listenersIndex: any
   protected items: S3ItemStorage
   protected s3Handlers: S3Handlers
-
   protected config: S3ClientConfig
+  protected queue: PQueue
+  protected listQueue: PQueue
 
   constructor(s3Handlers: S3Handlers, config: S3ClientConfig = defaultConfig) {
     this.listenersIndex = {}
@@ -27,204 +31,186 @@ export class S3Client {
     this.config = config
     this.s3Handlers = s3Handlers
 
+    this.queue = new PQueue({
+      concurrency: 10,
+      autoStart: true,
+      ...(this.config.queueConfig || {}),
+    })
+    this.listQueue = new PQueue({
+      concurrency: 1,
+      autoStart: true,
+    })
     setImmediate(this.init.bind(this))
   }
 
-  validateConfig() {
+  async validateConfig() {
     if (this.config.appGroup === '_app_group_needed_') {
       console.error('App Group Needed Please provide')
       process.exit(-1)
     }
+
+    let localDirPath = localPath('', this.config.directory)
+    try {
+      await makeDir(localDirPath)
+    } catch (e) {
+      console.error("Couldn't create local directory", localDirPath, e)
+      process.exit(-1)
+    }
+
+    let items = this.items
+    try {
+      this.items = await restore(this.config)
+    } catch (_) {}
+
+    if (!this.items) {
+      this.items = items
+    } else {
+      this.items = {
+        ...this.items,
+        ...items,
+      }
+    }
   }
 
   async init() {
-    this.validateConfig()
-    await RNFS.mkdir(this.localPath(''))
+    await this.validateConfig()
   }
 
   addUpload(key: string, filePath: string, meta?: any) {
-    const { extra, payload, type } = meta || { payload: {}, extra: {}, type: 'binary/octet-stream' }
-
-    this.items[key] = {
-      key,
-      name: path.basename(key),
-      filePath,
-      meta,
-      state: 'uploading',
+    if (!this.items.hasOwnProperty(key)) {
+      this.items[key] = {
+        key,
+        name: baseName(key),
+        filePath,
+        meta,
+        retries: this.config.retries,
+        state: 'uploading',
+      }
     }
-    setImmediate(async () => {
-      const s3Params = await this.s3Handlers.create({ key, type: type })
-      const url = s3Params.url
-      const fields = s3Params.fields
 
-      const options: MultipartUploadOptions = {
-        url,
-        path: Platform.OS === 'ios' ? `file://${filePath}` : filePath,
-        method: 'POST',
-        type: 'multipart',
-        field: 'file',
-        parameters: {
-          ...fields,
-          'x-amz-meta-json': JSON.stringify(payload),
-          ...extra,
-          'Content-Type': type,
-        },
-        headers: {
-          'Content-Type': type,
-        },
-        notification: {
-          enabled: false,
-        },
-        appGroup: 'group.com.example.app',
-      }
-
-      try {
-        this.items[key].uploadId = await Upload.startUpload(options)
-      } catch (e) {
-        console.error(e)
-      }
-
-      // @ts-ignore
-      Upload.addListener('progress', this.uploads[key].uploadId, (data) => {
-        this.items[key].progress = data.progress
-        this.notify(key, 'progress', this.items[key])
+    this.queue
+      .add(async () => {
+        await store(this.items, this.config)
+        return uploadHandler({
+          system: {
+            s3Handlers: this.s3Handlers,
+            config: this.config,
+            notify: this.notify.bind(this),
+          },
+          item: this.items[key],
+        })
       })
-
-      // @ts-ignore
-      Upload.addListener('error', this.uploads[key].uploadId, (err) => {
-        this.items[key].error = err
-
+      .catch((e) => {
+        console.error('upload handler error', e)
+        this.items[key].error = e
         this.notify(key, 'error', this.items[key])
       })
-
-      // @ts-ignore
-      Upload.addListener('completed', this.uploads[key].uploadId, async (res: any) => {
-        this.items[key].response = res
-
-        const localPath = this.localPath(this.items[key].key)
-
-        await RNFS.mkdir(path.dirname(localPath))
-        await RNFS.moveFile(this.items[key].filePath!, localPath)
-
-        const stats = await RNFS.stat(localPath)
-
-        this.items[key].filePath = path
-        this.items[key].state = 'local'
-        this.items[key].progress = undefined
-        this.items[key].meta.size = stats.size
-
-        return this.notify(key, 'uploaded', this.items[key])
-      })
-
-      // @ts-ignore
-      Upload.addListener('cancelled', this.uploads[key].uploadId, () => {
-        const data: S3Item = { ...this.items[key] }
-        delete this.items[key]
-        this.notify(key, 'remove', data)
-      })
-    })
   }
 
   addDownload(key: string) {
-    const filePath = this.localPath(key)
     this.items[key].state = 'downloading'
 
-    setImmediate(async () => {
-      await RNFS.mkdir(path.dirname(filePath))
-
-      const { jobId, promise: downloader } = RNFS.downloadFile({
-        fromUrl: `${this.items[key].uri}`,
-        toFile: filePath,
-        cacheable: false,
-        background: true,
-        discretionary: false,
-        begin: () => {
-          this.items[key].progress = 0
-          this.notify(key, 'add', this.items[key])
-        },
-        progress: (p) => {
-          this.items[key].progress = (p.bytesWritten * 100) / p.contentLength
-          this.notify(key, 'progress', this.items[key])
-        },
+    this.queue
+      .add(async () => {
+        await store(this.items, this.config)
+        return downloadHandler({
+          system: {
+            config: this.config,
+            s3Handlers: this.s3Handlers,
+            notify: this.notify.bind(this),
+          },
+          item: this.items[key],
+        })
       })
-      this.items[key].downloadId = `${jobId}`
-
-      try {
-        this.items[key].response = await downloader
-
-        this.items[key].filePath = filePath
-        this.items[key].existsLocally = true
-        this.items[key].progress = undefined
-        this.items[key].state = 'local'
-      } catch (e) {
-        console.error(e)
-        const { uri, meta } = await this.s3Handlers.get(key)
-
+      .catch((e) => {
         this.items[key].error = e
-        this.items[key].uri = uri
-        this.items[key].meta = meta || this.items[key].meta
-      }
-
-      return this.notify(key, this.items[key].error ? 'error' : 'downloaded', this.items[key]).then(() => {
-        if (this.items[key].error) {
-          this.addDownload(key)
-        }
+        this.notify(key, 'error', this.items[key])
       })
-    })
-  }
-
-  localPath(key: string) {
-    return `${RNFS.CachesDirectoryPath}/${this.config.directory}/${key}`
-  }
-
-  async existsLocal(key: string) {
-    return await RNFS.exists(this.localPath(key))
   }
 
   async remove(key: string) {
-    await this.s3Handlers.remove(key)
+    try {
+      await cancelDownload(`${this.items[key].downloadId}`)
+    } catch (_) {}
+    try {
+      await cancelUpload(`${this.items[key].uploadId}`)
+    } catch (_) {}
+    try {
+      await this.s3Handlers.remove(key)
+      await removeFile(key, this.config.directory)
+    } catch (_) {}
     delete this.items[key]
-    return this.notify(key, 'remove')
+    this.notify(key, 'remove')
+  }
+
+  cancel(key: string) {
+    const item = this.items[key]
+
+    if (item.state === 'uploading' && item.uploadId) {
+      cancelUpload(item.uploadId!)
+    } else if (item.state === 'downloading' && item.downloadId) {
+      cancelDownload(item.downloadId!)
+    }
+
+    delete this.items[key]
+
+    this.notify(key, 'remove')
   }
 
   list(prefix: string, reload = false) {
-    setImmediate(async () => {
-      if (!reload) {
-        return
-      }
-      const remotes = await this.s3Handlers.list(prefix)
+    this.listQueue
+      .add(async () => {
+        if (!reload) {
+          return
+        }
+        const remotes = await this.s3Handlers.list(prefix)
 
-      for (const remote of remotes) {
-        let item: S3Item
-        if (this.items.hasOwnProperty(remote.key)) {
-          this.items[remote.key].meta = remote.meta
-          this.items[remote.key].uri = remote.url
-          item = this.items[remote.key]
-        } else if (this.items.hasOwnProperty(prefix)) {
-          this.items[prefix].meta = remote.meta
-          this.items[prefix].uri = remote.url
-          item = this.items[prefix]
-        } else {
-          item = {
-            key: path.join(prefix, remote.key),
-            name: remote.key,
-            meta: remote.meta,
-            uri: remote.url,
-            state: 'remote',
+        for (const remote of remotes) {
+          let item: S3Item
+          if (this.items.hasOwnProperty(remote.key)) {
+            this.items[remote.key].meta = remote.meta
+            this.items[remote.key].uri = remote.url
+            item = this.items[remote.key]
+          } else if (this.items.hasOwnProperty(prefix)) {
+            this.items[prefix].meta = remote.meta
+            this.items[prefix].uri = remote.url
+            item = this.items[prefix]
+          } else {
+            item = {
+              key: pathJoin(prefix, remote.key),
+              retries: this.config.retries,
+              name: remote.key,
+              meta: remote.meta,
+              uri: remote.url,
+              state: 'remote',
+            }
+          }
+
+          if (await existsLocal(item.key, this.config.directory)) {
+            let hash = ''
+            if (remote?.meta?.hash) {
+              hash = remote.meta.hash
+            } else {
+              try {
+                const { meta } = await this.s3Handlers.get(item.key)
+                hash = `${meta.hash}`
+              } catch (_) {}
+            }
+            item.existsLocally = await confirmHash(item.key, this.config.directory, hash)
+            item.filePath = localPath(item.key, this.config.directory)
+            item.state = 'local'
+          }
+
+          this.items[item.key] = item
+
+          if (!item.existsLocally && this.config.immediateDownload) {
+            this.addDownload(item.key)
           }
         }
 
-        if (await this.existsLocal(item.key)) {
-          item.existsLocally = true
-          item.filePath = this.localPath(item.key)
-          item.state = 'local'
-        }
-
-        this.items[item.key] = item
-      }
-
-      this.notify(prefix, 'all').catch((e) => console.error(e))
-    })
+        this.notify(prefix, 'all')
+      })
+      .catch((e) => console.error('error on list enqueue', e))
 
     return Object.values(this.items).filter((i) => {
       return i.key.startsWith(prefix)
@@ -260,11 +246,26 @@ export class S3Client {
     delete this.listenersIndex[id]
   }
 
-  async notify(key: string, type: notifyTypes, item?: S3Item) {
+  handleError(key: string) {
+    if (this.items[key].retries > 0) {
+      this.items[key].retries--
+
+      if (this.items[key].state === 'uploading') {
+        this.addUpload(key, this.items[key].filePath!, this.items[key].meta)
+      } else if (this.items[key].state === 'downloading') {
+        this.addDownload(key)
+      }
+    }
+  }
+
+  notify(key: string, type: notifyTypes, item?: S3Item) {
     if (item) {
       this.items[key] = item
-    } else if (type === 'remove') {
+    }
+    if (type === 'remove') {
       delete this.items[key]
+    } else if (type === 'error') {
+      this.handleError(key)
     }
 
     for (const lid in this.listeners) {

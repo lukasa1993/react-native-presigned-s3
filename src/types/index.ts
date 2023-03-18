@@ -1,3 +1,6 @@
+import { Options, QueueAddOptions } from 'p-queue'
+import PriorityQueue from 'p-queue/dist/priority-queue'
+
 export type S3Handlers = {
   create: (payload: any, ...params: any) => Promise<any>
   list: (prefix: string, ...params: any) => Promise<any>
@@ -10,6 +13,9 @@ export type S3ClientConfig = {
   immediateDownload: boolean
   appGroup: string
   localCache: boolean
+  retries: number
+  persistKey: string
+  queueConfig?: Options<PriorityQueue, QueueAddOptions>
 }
 
 export type S3Item = {
@@ -17,6 +23,7 @@ export type S3Item = {
   key: string
   name: string
   meta: any
+  retries: number
   uri?: string
   filePath?: string
   existsLocally?: boolean
