@@ -6,7 +6,7 @@ export type S3Handlers = {
   list: (
     prefix: string,
     ...params: any
-  ) => Promise<{ key: string; Key?: string; meta: { hash?: string }; url: string }[]>
+  ) => Promise<{ key: string; Key?: string; meta: { hash?: string; isFolder?: boolean }; url: string }[]>
   remove: (key: string, ...params: any) => Promise<void>
   get: (key: string, ...params: any) => Promise<{ uri: string; meta: { hash: string } }>
 }

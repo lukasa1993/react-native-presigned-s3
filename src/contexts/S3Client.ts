@@ -59,7 +59,26 @@ export class S3Client {
 
     let items = this.items
     try {
-      this.items = await restore(this.config)
+      const restored = await restore(this.config)
+      const folders: S3Item[] = []
+      const files: S3Item[] = []
+      for (const restoredKey in restored) {
+        const item: S3Item = restored[restoredKey]
+
+        if (item.meta?.isFolder) {
+          folders.push(item)
+        } else {
+          files.push(item)
+        }
+      }
+
+      for (const folder of folders) {
+        this.items[folder.key] = folder
+      }
+
+      for (const file of files) {
+        this.items[file.key] = file
+      }
     } catch (_) {}
 
     if (!this.items) {
@@ -188,7 +207,7 @@ export class S3Client {
           }
           existingFiles.push(item.key)
 
-          if (await existsLocal(item.key, this.config.directory)) {
+          if (!item.meta?.isFolder && (await existsLocal(item.key, this.config.directory))) {
             let hash = ''
             if (remote?.meta?.hash) {
               hash = remote.meta.hash
@@ -204,7 +223,6 @@ export class S3Client {
           }
 
           this.items[item.key] = item
-
           if (!item.meta?.isFolder && !item.existsLocally && this.config.immediateDownload) {
             this.addDownload(item.key)
           }

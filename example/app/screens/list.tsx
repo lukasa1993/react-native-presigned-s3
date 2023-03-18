@@ -3,7 +3,9 @@ import {FlatList, RefreshControl, Text, View} from 'react-native';
 import FileRow from '../componenets/fileRow';
 import {useList} from 'react-native-presigned-s3';
 import {useMemo} from 'react';
-
+// @ts-ignore
+import path from 'path-browserify';
+import FolderRow from '../componenets/folderRow';
 export default function ListScreen() {
   const {params} = useRoute();
   // @ts-ignore
@@ -11,17 +13,27 @@ export default function ListScreen() {
   const {files, loading, reload} = useList(current_path);
   const data = useMemo(
     () =>
-      files.sort((a,b) => {
-        if (a.meta?.isFolder) {
-          return -1;
-        }
-        if (b.meta?.isFolder) {
-          return 1;
-        }
-        return a.name.localeCompare(b.name);
-      }),
-    [files],
+      files
+        .filter(f => {
+          return (
+            f.key
+              .replace(current_path, '')
+              .replace(new RegExp('/', 'g'), '')
+              .trim() === path.basename(f.key)
+          );
+        })
+        .sort((a, b) => {
+          if (a.meta?.isFolder) {
+            return -1;
+          }
+          if (b.meta?.isFolder) {
+            return 1;
+          }
+          return a.name.localeCompare(b.name);
+        }),
+    [current_path, files],
   );
+console.log(current_path,files.map(f=>f.key))
   return (
     <View
       style={{
@@ -41,7 +53,12 @@ export default function ListScreen() {
         }
         data={data}
         keyExtractor={item => item.key}
-        renderItem={({item}) => <FileRow fileKey={item.key} {...item} />}
+        renderItem={({item}) => {
+          if (item.meta.isFolder) {
+            return <FolderRow folderPath={item.key} name={item.name} />;
+          }
+          return <FileRow fileKey={item.key} {...item} />;
+        }}
       />
     </View>
   );

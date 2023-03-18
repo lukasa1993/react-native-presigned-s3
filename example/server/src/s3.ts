@@ -163,6 +163,7 @@ class S3 {
     const folders = await pMap(Folders || [], (folder) => {
       return {
         key: folder.Prefix,
+        Key: folder.Prefix,
         meta: {
           isFolder: true,
           path: folder.Prefix,
