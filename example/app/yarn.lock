@@ -1234,7 +1234,7 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@lukasa1993/p-queue@7.3.4", p-queue@7.3.4, "p-queue@npm:@lukasa1993/p-queue":
+"@lukasa1993/p-queue@7.3.4", "p-queue@npm:@lukasa1993/p-queue":
   version "7.3.4"
   resolved "https://registry.yarnpkg.com/@lukasa1993/p-queue/-/p-queue-7.3.4.tgz#eeac4650d8c44ce0b4fb32dc1319be1c0282e08f"
   integrity sha512-oy9QAA2ac64SGKmU6wjwmLNxwUWEsCAC/mjx8t1QRa2cHtwGzyx4eR65HMnXyGT23xNKMaXhhRuOWX037aj34w==
@@ -5198,10 +5198,10 @@ react-native-image-crop-picker@0.39.0:
   resolved "https://registry.yarnpkg.com/react-native-image-crop-picker/-/react-native-image-crop-picker-0.39.0.tgz#9cb8e8ffb0e8ab06f7b3227cadf077169e225eba"
   integrity sha512-4aANbQMrmU6zN/4b0rVBA7SbaZ3aa5JESm3Xk751sINybZMt1yz/9h95LkO7U0pbslHDo3ofXjG75PmQRP6a/w==
 
-react-native-presigned-s3@0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/react-native-presigned-s3/-/react-native-presigned-s3-0.0.4.tgz#8f4f32f7ca2a65defa76e1dfdeae6b848516165c"
-  integrity sha512-mzCLk8dVY0iUUnk+LMWSyzy+q8vBhp3fDxXsAa4fw9T8s1P3p8oaGcyI5AhD5Q6MyO0Izqe4j+SKcr5AnZM5vw==
+react-native-presigned-s3@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/react-native-presigned-s3/-/react-native-presigned-s3-0.0.5.tgz#38d5c80b1d4ffc66eff26e8c0aecc526842cd09e"
+  integrity sha512-7AEq1eYgjW8QQ9iwC8r4Y4rK+Ydxe74oBrZ4NOuSjdwUdEZnyaVIpNNUD6AOGb4xYW/Da71NK3di3DO/RimJpA==
   dependencies:
     "@lukasa1993/p-queue" "7.3.4"
     p-queue "npm:@lukasa1993/p-queue"
