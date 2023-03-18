@@ -2,28 +2,33 @@ import { useCallback, useEffect, useState } from 'react'
 import { useS3Client } from '../contexts/PS3Context'
 import { S3Item, useListParams } from '../types'
 
-export function useList(path: string, params: useListParams = { mountReload: true, progress: false }) {
+export function useList(path: string, params: useListParams = { progress: false }) {
   const s3Client = useS3Client()
 
-  const [files, setFiles] = useState<S3Item[]>([])
+  const [files, setFiles] = useState<S3Item[]>(s3Client.list(path))
   const [loading, setLoading] = useState(true)
 
-  const reload = useCallback(
-    (r: boolean = true) => {
-      setLoading(true)
-      s3Client.list(path, r).catch((e) => console.log(e))
-    },
-    [path, s3Client]
-  )
+  const [error, setError] = useState<any[]>([])
+
+  const reload = useCallback(() => {
+    setLoading(true)
+    s3Client.list(path, true)
+  }, [path, s3Client])
 
   useEffect(() => {
-    reload(params.mountReload)
-  }, [params.mountReload, reload])
+    reload()
+  }, [reload])
 
   useEffect(() => {
     const lid = s3Client.addListener(path, (_key, type, list) => {
       setLoading(false)
-      if (type === 'progress') {
+      if (type === 'error') {
+        let errors = []
+        for (const s3Item of list) {
+          errors.push(s3Item.error)
+        }
+        setError(errors)
+      } else if (type === 'progress') {
         if (params.progress) {
           setFiles(list)
         }
@@ -58,6 +63,7 @@ export function useList(path: string, params: useListParams = { mountReload: tru
 
   return {
     files,
+    error,
     loading,
     reload,
     removeFile,

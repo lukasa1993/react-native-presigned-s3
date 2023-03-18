@@ -14,11 +14,12 @@ export type S3ClientConfig = {
 
 export type S3Item = {
   state: 'uploading' | 'downloading' | 'local' | 'remote'
-  name: string
   key: string
+  name: string
+  meta: any
+  uri?: string
   filePath?: string
   existsLocally?: boolean
-  meta: any
   progress?: number
   response?: any
   error?: any
@@ -36,5 +37,4 @@ export type notifyCB = (key: string, type: notifyTypes, item?: S3Item) => void
 
 export type useListParams = {
   progress: boolean
-  mountReload: boolean
 }

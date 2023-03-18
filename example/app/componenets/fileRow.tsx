@@ -16,14 +16,12 @@ export default function FileRow({
 }: S3Item & {fileKey: string}) {
   const navigation = useNavigation();
   const {removeFile, files, addDownload} = useList(key, {
-    mountReload: false,
     progress: true,
   });
 
   const file = useMemo(() => files[0] || {}, [files]);
   const pathFile = file.filePath || filePath;
   const locallyExists = file.existsLocally || existsLocally;
-  console.log(key, {files});
 
   const [openAfterDownload, setOpenAfterDownload] = useState(false);
 
