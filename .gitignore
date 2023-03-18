@@ -21,3 +21,4 @@ coverage
 
 **pods**
 example/app/ios/build/
+!/src/lib/p-queue/dist/

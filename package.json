@@ -1,6 +1,6 @@
 {
   "name": "react-native-presigned-s3",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "author": "Luka Dodelia <luka@picktek.com>",
   "bugs": {
     "email": "luka@picktek.com",
@@ -18,11 +18,11 @@
   "types": "dist",
   "repository": "github:lukasa1993/react-native-presigned-s3",
   "peerDependencies": {
+    "@react-native-async-storage/async-storage": "*",
     "react": "*",
     "react-native": "*",
     "react-native-background-upload": "6.6.0",
-    "react-native-fs": "2.20.0",
-    "@react-native-async-storage/async-storage": "*"
+    "react-native-fs": "2.20.0"
   },
   "scripts": {
     "watch": "tsc --project tsconfig.json --watch",
@@ -37,8 +37,8 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "p-map": "5.5.0",
-    "p-queue": "7.3.4",
+    "@lukasa1993/p-queue": "7.3.4",
+    "p-queue": "npm:@lukasa1993/p-queue",
     "path-browserify": "1.0.1"
   },
   "devDependencies": {
@@ -50,6 +50,7 @@
     "@types/react-native": "*",
     "babel-eslint": "10.1.0",
     "commitizen": "4.3.0",
+    "cpx": "1.5.0",
     "cz-conventional-changelog": "3.3.0",
     "eslint": "8.36.0",
     "eslint-config-prettier": "8.7.0",
@@ -63,7 +64,6 @@
     "react-native-background-upload": "6.6.0",
     "react-native-fs": "2.20.0",
     "semantic-release": "*",
-    "cpx": "1.5.0",
     "typescript": "4.9.5"
   },
   "release": {

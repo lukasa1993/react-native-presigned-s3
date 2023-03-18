@@ -177,9 +177,9 @@ export class S3Client {
             item = this.items[prefix]
           } else {
             item = {
-              key: pathJoin(prefix, remote.key),
+              key: remote.Key || pathJoin(prefix, remote.key),
+              name: baseName(remote.Key || remote.key),
               retries: this.config.retries,
-              name: remote.key,
               meta: remote.meta,
               uri: remote.url,
               state: 'remote',

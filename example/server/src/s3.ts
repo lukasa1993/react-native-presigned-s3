@@ -189,6 +189,7 @@ class S3 {
 
         return {
           key: path.basename(content.Key),
+          Key: content.Key,
           url: _url,
           meta: _meta,
           size: content.Size,

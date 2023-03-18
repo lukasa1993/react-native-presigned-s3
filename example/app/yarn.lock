@@ -1234,6 +1234,14 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
+"@lukasa1993/p-queue@7.3.4", p-queue@7.3.4, "p-queue@npm:@lukasa1993/p-queue":
+  version "7.3.4"
+  resolved "https://registry.yarnpkg.com/@lukasa1993/p-queue/-/p-queue-7.3.4.tgz#eeac4650d8c44ce0b4fb32dc1319be1c0282e08f"
+  integrity sha512-oy9QAA2ac64SGKmU6wjwmLNxwUWEsCAC/mjx8t1QRa2cHtwGzyx4eR65HMnXyGT23xNKMaXhhRuOWX037aj34w==
+  dependencies:
+    eventemitter3 "^4.0.7"
+    p-timeout "^5.0.2"
+
 "@nicolo-ribaudo/eslint-scope-5-internals@5.1.1-v1":
   version "5.1.1-v1"
   resolved "https://registry.yarnpkg.com/@nicolo-ribaudo/eslint-scope-5-internals/-/eslint-scope-5-internals-5.1.1-v1.tgz#dbf733a965ca47b1973177dc0bb6c889edcfb129"
@@ -4912,14 +4920,6 @@ p-locate@^5.0.0:
   dependencies:
     p-limit "^3.0.2"
 
-p-queue@7.3.4:
-  version "7.3.4"
-  resolved "https://registry.yarnpkg.com/p-queue/-/p-queue-7.3.4.tgz#7ef7d89b6c1a0563596d98adbc9dc404e9ed4a84"
-  integrity sha512-esox8CWt0j9EZECFvkFl2WNPat8LN4t7WWeXq73D9ha0V96qPRufApZi4ZhPwXAln1uVVal429HVVKPa2X0yQg==
-  dependencies:
-    eventemitter3 "^4.0.7"
-    p-timeout "^5.0.2"
-
 p-timeout@^5.0.2:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/p-timeout/-/p-timeout-5.1.0.tgz#b3c691cf4415138ce2d9cfe071dba11f0fee085b"
@@ -5198,8 +5198,14 @@ react-native-image-crop-picker@0.39.0:
   resolved "https://registry.yarnpkg.com/react-native-image-crop-picker/-/react-native-image-crop-picker-0.39.0.tgz#9cb8e8ffb0e8ab06f7b3227cadf077169e225eba"
   integrity sha512-4aANbQMrmU6zN/4b0rVBA7SbaZ3aa5JESm3Xk751sINybZMt1yz/9h95LkO7U0pbslHDo3ofXjG75PmQRP6a/w==
 
-"react-native-presigned-s3@file:../../src":
-  version "0.0.0"
+react-native-presigned-s3@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/react-native-presigned-s3/-/react-native-presigned-s3-0.0.4.tgz#8f4f32f7ca2a65defa76e1dfdeae6b848516165c"
+  integrity sha512-mzCLk8dVY0iUUnk+LMWSyzy+q8vBhp3fDxXsAa4fw9T8s1P3p8oaGcyI5AhD5Q6MyO0Izqe4j+SKcr5AnZM5vw==
+  dependencies:
+    "@lukasa1993/p-queue" "7.3.4"
+    p-queue "npm:@lukasa1993/p-queue"
+    path-browserify "1.0.1"
 
 react-native-safe-area-context@4.5.0:
   version "4.5.0"

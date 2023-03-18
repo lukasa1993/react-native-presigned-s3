@@ -1239,6 +1239,14 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
+"@lukasa1993/p-queue@7.3.4", "p-queue@npm:@lukasa1993/p-queue":
+  version "7.3.4"
+  resolved "https://registry.yarnpkg.com/@lukasa1993/p-queue/-/p-queue-7.3.4.tgz#eeac4650d8c44ce0b4fb32dc1319be1c0282e08f"
+  integrity sha512-oy9QAA2ac64SGKmU6wjwmLNxwUWEsCAC/mjx8t1QRa2cHtwGzyx4eR65HMnXyGT23xNKMaXhhRuOWX037aj34w==
+  dependencies:
+    eventemitter3 "^4.0.7"
+    p-timeout "^5.0.2"
+
 "@nicolo-ribaudo/eslint-scope-5-internals@5.1.1-v1":
   version "5.1.1-v1"
   resolved "https://registry.yarnpkg.com/@nicolo-ribaudo/eslint-scope-5-internals/-/eslint-scope-5-internals-5.1.1-v1.tgz#dbf733a965ca47b1973177dc0bb6c889edcfb129"
@@ -2216,7 +2224,7 @@ aggregate-error@^3.0.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
-aggregate-error@^4.0.0, aggregate-error@^4.0.1:
+aggregate-error@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/aggregate-error/-/aggregate-error-4.0.1.tgz#25091fe1573b9e0be892aeda15c7c66a545f758e"
   integrity sha512-0poP0T7el6Vq3rstR8Mn4V/IQrpBLO6POkUSrN7RhyY+GF/InCFShQzsQ39T25gkHhLgSLByyAz+Kjb+c2L98w==
@@ -7756,13 +7764,6 @@ p-locate@^6.0.0:
   dependencies:
     p-limit "^4.0.0"
 
-p-map@5.5.0:
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/p-map/-/p-map-5.5.0.tgz#054ca8ca778dfa4cf3f8db6638ccb5b937266715"
-  integrity sha512-VFqfGDHlx87K66yZrNdI4YGtD70IRyd+zSvgks6mzHPRNkoKy+9EKP4SFC77/vTTQYmRmti7dvqC+m5jBrBAcg==
-  dependencies:
-    aggregate-error "^4.0.0"
-
 p-map@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/p-map/-/p-map-2.1.0.tgz#310928feef9c9ecc65b68b17693018a665cea175"
@@ -7774,14 +7775,6 @@ p-map@^4.0.0:
   integrity sha512-/bjOqmgETBYB5BoEeGVea8dmvHb2m9GLy1E9W43yeyfP6QQCZGFNa+XRceJEuDB6zqr+gKpIAmlLebMpykw/MQ==
   dependencies:
     aggregate-error "^3.0.0"
-
-p-queue@7.3.4:
-  version "7.3.4"
-  resolved "https://registry.yarnpkg.com/p-queue/-/p-queue-7.3.4.tgz#7ef7d89b6c1a0563596d98adbc9dc404e9ed4a84"
-  integrity sha512-esox8CWt0j9EZECFvkFl2WNPat8LN4t7WWeXq73D9ha0V96qPRufApZi4ZhPwXAln1uVVal429HVVKPa2X0yQg==
-  dependencies:
-    eventemitter3 "^4.0.7"
-    p-timeout "^5.0.2"
 
 p-reduce@^2.0.0:
   version "2.1.0"
