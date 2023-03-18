@@ -1,6 +1,8 @@
 import {Alert, Text, TouchableOpacity} from 'react-native';
 import React, {useCallback} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
+// @ts-ignore
+import path from 'path-browserify';
 
 export default function AddButton() {
   const navigation = useNavigation();
@@ -24,7 +26,7 @@ export default function AddButton() {
                     // @ts-ignore
                     return navigation.push('List', {
                       // @ts-ignore
-                      path: `${params!.path}/${text}`,
+                      path: path.join(`${params!.path}`, `${text}`),
                     });
                   },
                 },

@@ -4,6 +4,9 @@ Handles S3 PreSigned Upload/Download for folders and single files provides hooks
 post and get payloads can be mimicked in app as well but not recommended for access control. To check out expected
 server responses please see [example/server](./example/server) and for simple demo app [example/app](./example/app)
 
+### Sample
+![Example App](./sample.gif)
+
 ## Setup
 1. 
    1. ```yarn add react-native-presigned-s3 react-native-background-upload react-native-fs @react-native-async-storage/async-storage```

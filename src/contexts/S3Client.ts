@@ -165,6 +165,7 @@ export class S3Client {
         }
         const remotes = await this.s3Handlers.list(prefix)
 
+        let existingFiles = []
         for (const remote of remotes) {
           let item: S3Item
           if (this.items.hasOwnProperty(remote.key)) {
@@ -185,6 +186,7 @@ export class S3Client {
               state: 'remote',
             }
           }
+          existingFiles.push(item.key)
 
           if (await existsLocal(item.key, this.config.directory)) {
             let hash = ''
@@ -203,8 +205,21 @@ export class S3Client {
 
           this.items[item.key] = item
 
-          if (!item.existsLocally && this.config.immediateDownload) {
+          if (!item.meta?.isFolder && !item.existsLocally && this.config.immediateDownload) {
             this.addDownload(item.key)
+          }
+        }
+
+        let removedKeys = []
+        for (const itemsKey in this.items) {
+          if (itemsKey.startsWith(prefix) && !existingFiles.includes(itemsKey)) {
+            removedKeys.push(itemsKey)
+          }
+        }
+
+        for (const removedKey of removedKeys) {
+          if (this.items[removedKey].existsLocally) {
+            await this.remove(removedKey)
           }
         }
 
