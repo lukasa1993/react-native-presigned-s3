@@ -148,13 +148,13 @@ export class S3Client {
 
     if (item.state === 'uploading' && item.uploadId) {
       cancelUpload(item.uploadId!)
+      delete this.items[key]
+      this.notify(key, 'remove')
     } else if (item.state === 'downloading' && item.downloadId) {
       cancelDownload(item.downloadId!)
+      delete this.items[key]
+      this.notify(key, 'remove')
     }
-
-    delete this.items[key]
-
-    this.notify(key, 'remove')
   }
 
   list(prefix: string, reload = false) {
@@ -208,6 +208,7 @@ export class S3Client {
           }
         }
 
+        await store(this.items, this.config)
         this.notify(prefix, 'all')
       })
       .catch((e) => console.error('error on list enqueue', e))
