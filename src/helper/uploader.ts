@@ -14,10 +14,7 @@ export async function uploadHandler({
   const key = item.key
   const { extra, payload, type } = item.meta || { payload: {}, extra: {}, type: 'binary/octet-stream' }
 
-  const s3Params = await s3Handlers.create({ key, type: type })
-
-  const url = s3Params.url
-  const fields = s3Params.fields
+  const { fields, url } = await s3Handlers.create({ key, type: type })
 
   const options: MultipartUploadOptions = {
     url,

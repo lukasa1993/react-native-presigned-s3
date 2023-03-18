@@ -2,10 +2,10 @@ import { Options, QueueAddOptions } from 'p-queue'
 import PriorityQueue from 'p-queue/dist/priority-queue'
 
 export type S3Handlers = {
-  create: (payload: any, ...params: any) => Promise<any>
-  list: (prefix: string, ...params: any) => Promise<any>
-  remove: (key: string, ...params: any) => Promise<any>
-  get: (key: string, ...params: any) => Promise<any>
+  create: (payload: any, ...params: any) => Promise<{ fields: { [key: string]: string }; url: string }>
+  list: (prefix: string, ...params: any) => Promise<{ key: string; meta: { hash?: string }; url: string }[]>
+  remove: (key: string, ...params: any) => Promise<void>
+  get: (key: string, ...params: any) => Promise<{ uri: string; meta: { hash: string } }>
 }
 
 export type S3ClientConfig = {
