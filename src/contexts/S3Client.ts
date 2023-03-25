@@ -226,6 +226,12 @@ export class S3Client {
             item.existsLocally = await confirmHash(item.key, this.config.directory, hash)
             item.filePath = localPath(item.key, this.config.directory)
             item.state = 'local'
+            if (!item.existsLocally) {
+              try {
+                await removeFile(item.key, this.config.directory)
+              } catch (_) {}
+              item.state = 'remote'
+            }
           }
 
           this.items[item.key] = item
