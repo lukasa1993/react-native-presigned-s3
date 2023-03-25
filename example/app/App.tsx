@@ -29,7 +29,7 @@ const handlers: S3Handlers = {
 const s3Client = new S3Client(handlers, {
   appGroup: 'com.example.ps3.test',
   directory: 'ps3_test',
-  immediateDownload: true,
+  immediateDownload: false,
   persistKey: '@example_ps3_storage_key',
   retries: 5,
   shouldPersist: false,

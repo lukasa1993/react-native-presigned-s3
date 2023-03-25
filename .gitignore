@@ -21,4 +21,7 @@ coverage
 
 **pods**
 example/app/ios/build/
+example/app/android/build
+example/app/android/app/build
+example/app/android/.gradle
 !/src/lib/p-queue/dist/

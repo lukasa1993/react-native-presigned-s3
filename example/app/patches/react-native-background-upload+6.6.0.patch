@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-background-upload/android/build.gradle b/node_modules/react-native-background-upload/android/build.gradle
+index fa6963f..bc5ca14 100755
+--- a/node_modules/react-native-background-upload/android/build.gradle
++++ b/node_modules/react-native-background-upload/android/build.gradle
+@@ -1,6 +1,6 @@
+ buildscript {
+     ext {
+-        kotlinVersion = '1.6.0'
++        kotlinVersion = '1.6.20'
+         buildToolsVersion = '29.0.2'
+         compileSdkVersion = 29
+         targetSdkVersion = 29
