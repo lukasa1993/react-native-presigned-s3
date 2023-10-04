@@ -1,6 +1,6 @@
 {
   "name": "react-native-presigned-s3",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "author": "Luka Dodelia <luka@picktek.com>",
   "bugs": {
     "email": "luka@picktek.com",
@@ -67,7 +67,9 @@
     "typescript": "4.9.5"
   },
   "release": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "verifyConditions": [
       "@semantic-release/changelog",
       "@semantic-release/npm",
