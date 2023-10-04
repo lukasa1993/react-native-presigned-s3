@@ -26,8 +26,8 @@ server responses please see [example/server](./example/server) and for simple de
     const s3Client = new S3Client(handlers, {
       appGroup: 'com.example.ps3.test', // appGroup of app for background upload support https://developer.apple.com/documentation/foundation/nsfilemanager/1412643-containerurlforsecurityapplicati
       directory: 'ps3_test', // folder under RNFS.CachesDirectoryPath for local storage
-      immediateDownload: true,
-      localCache: false,
+      immediateDownload: true,      
+      shouldPersist: false,
       persistKey: '@example_ps3_storage_key', // async storage key for presistency
       retries: 5,
     });
