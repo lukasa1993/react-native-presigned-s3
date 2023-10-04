@@ -67,7 +67,7 @@
     "typescript": "4.9.5"
   },
   "release": {
-    "branch": "main",
+    "branches": ["main"],
     "verifyConditions": [
       "@semantic-release/changelog",
       "@semantic-release/npm",
