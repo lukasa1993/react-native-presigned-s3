@@ -205,7 +205,7 @@ export class S3Client {
         for (const remote of remotes) {
           let item: S3Item = this.items[remote.Key] || {
             key: remote.Key || pathJoin(prefix, remote.key),
-            name: baseName(remote.Key || remote.key),
+            name: remote.meta?.name || baseName(remote.Key || remote.key),
             retries: this.config.retries,
             meta: remote.meta,
             uri: remote.url,
