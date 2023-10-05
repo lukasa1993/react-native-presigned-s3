@@ -14,6 +14,7 @@ export type S3Handlers = {
 export type S3ClientConfig = {
   directory: string
   immediateDownload: boolean
+  autoRemove: boolean
   appGroup: string
   retries: number
   persistKey: string

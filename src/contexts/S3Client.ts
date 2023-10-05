@@ -9,6 +9,7 @@ import InternalListener from '../helper/listener'
 export const defaultConfig: S3ClientConfig = {
   directory: 'ps3_dl',
   immediateDownload: true,
+  autoRemove: false,
   appGroup: '_app_group_needed_',
   retries: 5,
   persistKey: '@p3_storage_key',
@@ -248,8 +249,8 @@ export class S3Client {
         }
 
         for (const removedKey of removedKeys) {
-          if (this.items[removedKey].existsLocally) {
-            await this.remove(removedKey)
+          if (this.items[removedKey].existsLocally && this.config.autoRemove) {
+            this.remove(removedKey)
           }
         }
 
