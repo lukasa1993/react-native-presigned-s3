@@ -45,7 +45,7 @@ export async function downloadHandler({
     item.state = 'local'
     internalListener.downloadCompleted(key, item)()
   } catch (e) {
-    console.error(e)
+    console.error('Download Handler Error', e)
     const { uri, meta } = await s3Handlers.get(key)
 
     item.error = e
