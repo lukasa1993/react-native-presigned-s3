@@ -56,6 +56,6 @@ export async function uploadHandler({
   Upload.addListener('cancelled', item.uploadId!, internalListener.uploadCancelled(key, item))
 }
 
-export function cancelUpload(uploadID: string) {
-  Upload.cancelUpload(uploadID).catch((e) => console.error('cancel upload error', e))
+export async function cancelUpload(uploadID: string) {
+  return Upload.cancelUpload(uploadID).catch((e) => console.error('cancel upload error', e))
 }

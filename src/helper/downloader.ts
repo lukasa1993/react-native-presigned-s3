@@ -56,6 +56,6 @@ export async function downloadHandler({
   }
 }
 
-export function cancelDownload(downloadID: string) {
-  return RNFS.stopDownload(parseInt(downloadID) > 0 ? parseInt(downloadID) : -1)
+export async function cancelDownload(downloadID: string) {
+  return RNFS.stopDownload(parseInt(downloadID, 10) > 0 ? parseInt(downloadID, 10) : -1)
 }

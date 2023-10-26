@@ -97,13 +97,14 @@ export default class InternalListener {
 
       const stats = await fileStats(_localPath)
 
-      const { meta } = await this.s3Handlers.get(item.key)
+      const { uri, meta } = await this.s3Handlers.get(item.key)
 
       item.existsLocally = await confirmHash(item.key, this.config.directory, meta.hash)
       item.filePath = _localPath
       item.state = 'local'
       item.progress = undefined
       item.meta.size = stats.size
+      item.uri = uri
 
       if (item.existsLocally) {
         this.notify(key, 'uploaded', item)

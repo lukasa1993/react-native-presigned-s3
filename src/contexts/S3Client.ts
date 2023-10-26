@@ -236,7 +236,12 @@ export class S3Client {
           }
 
           this.items[item.key] = item
-          if (!item.meta?.isFolder && !item.existsLocally && this.config.immediateDownload) {
+          if (
+            !item.meta?.isFolder &&
+            !item.existsLocally &&
+            item.state !== 'uploading' &&
+            this.config.immediateDownload
+          ) {
             this.addDownload(item.key)
           }
         }
