@@ -212,7 +212,7 @@ export class S3Client {
             meta: {}
           }
           item.name = remote.meta?.name || baseName(remote.Key || remote.key)
-          item.meta = remote.meta || {}
+          item.meta = remote.meta || item.meta || {}
 
           existingFiles.add(item.key)
 
