@@ -103,6 +103,7 @@ export default class InternalListener {
       item.filePath = _localPath
       item.state = 'local'
       item.progress = undefined
+      item.meta = meta;
       item.meta.size = stats.size
       item.uri = uri
 

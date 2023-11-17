@@ -35,6 +35,7 @@ export async function downloadHandler({
     } else {
       try {
         const { meta } = await s3Handlers.get(item.key)
+        item.meta = meta;
         hash = `${meta.hash}`
       } catch (_) {}
     }

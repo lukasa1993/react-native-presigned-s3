@@ -208,6 +208,8 @@ export class S3Client {
             retries: this.config.retries,
             uri: remote.url,
             state: 'remote',
+            name: '',
+            meta: {}
           }
           item.name = remote.meta?.name || baseName(remote.Key || remote.key)
           item.meta = remote.meta || {}
