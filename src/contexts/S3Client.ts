@@ -205,12 +205,12 @@ export class S3Client {
         for (const remote of remotes) {
           let item: S3Item = this.items[remote.Key] || {
             key: remote.Key || pathJoin(prefix, remote.key),
-            name: remote.meta?.name || baseName(remote.Key || remote.key),
             retries: this.config.retries,
-            meta: remote.meta,
             uri: remote.url,
             state: 'remote',
           }
+          item.name = remote.meta?.name || baseName(remote.Key || remote.key)
+          item.meta = remote.meta || {}
 
           existingFiles.add(item.key)
 
@@ -304,7 +304,7 @@ export class S3Client {
 
       if (this.items[key].state === 'uploading') {
         this.items[key].uploadId = undefined
-        this.addUpload(key, this.items[key].filePath!, this.items[key].meta)
+        this.addUpload(key, this.items[key].filePath!, this.items[key]?.meta)
       } else if (this.items[key].state === 'downloading') {
         this.items[key].downloadId = undefined
         this.addDownload(key)
