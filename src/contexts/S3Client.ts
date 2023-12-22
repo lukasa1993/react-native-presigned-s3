@@ -209,7 +209,7 @@ export class S3Client {
             uri: remote.url,
             state: 'remote',
             name: '',
-            meta: {}
+            meta: {},
           }
           item.name = remote.meta?.name || baseName(remote.Key || remote.key)
           item.meta = remote.meta || item.meta || {}
@@ -334,7 +334,7 @@ export class S3Client {
           key,
           type,
           Object.values(this.items).filter((i) => {
-            return i.key.startsWith(listener.prefix)
+            return i.key.startsWith(listener.prefix) || i.meta?.key?.startsWith(listener.prefix)
           })
         )
       } catch (_) {}
