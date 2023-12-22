@@ -10,8 +10,13 @@ export function makeDir(dirPath: string) {
   return RNFS.mkdir(path.dirname(dirPath))
 }
 
-export function moveFile(from: string, to: string) {
-  return RNFS.moveFile(from, to)
+export async function moveFile(from: string, to: string) {
+  try {
+    return RNFS.moveFile(from, to)
+  } catch (e) {
+    await RNFS.unlink(to)
+    return RNFS.moveFile(from, to)
+  }
 }
 
 export function fileStats(filePath: string) {
