@@ -172,8 +172,10 @@ export class S3Client {
       } catch (_) {}
       try {
         await this.s3Handlers.remove(key)
-        await removeFile(key, this.config.directory)
       } catch (_) {}
+      try {
+        await removeFile(key, this.config.directory)
+      } catch (e) {}
       delete this.items[key]
       this.notify(key, 'remove')
     })
