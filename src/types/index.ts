@@ -42,10 +42,13 @@ export type S3ItemStorage = {
   [key: string]: S3Item
 }
 
-export type notifyTypes = 'progress' | 'downloaded' | 'uploaded' | 'remove' | 'add' | 'error' | 'all'
+export type notifyTypes = 'progress' | 'downloaded' | 'uploaded' | 'remove' | 'add' | 'error' | 'fatal' | 'all'
 export type ListenerCB = (key: string, type: Partial<notifyTypes>, list: S3Item[]) => void
 export type notifyCB = (key: string, type: notifyTypes, item?: S3Item) => void
 
 export type useListParams = {
   progress: boolean
+  onUploaded?: (key: string) => void
+  onDownloaded?: (key: string) => void
+  onError?: (key: string, error: unknown, fata: boolean) => void
 }

@@ -26,6 +26,9 @@ export function useList(path: string, params: useListParams = { progress: false 
         let errors = []
         for (const s3Item of list) {
           errors.push(s3Item.error)
+          if (s3Item.key === _key) {
+            params.onError?.(s3Item.key, s3Item.error, false)
+          }
         }
         setError(errors)
       } else if (type === 'progress') {
@@ -34,6 +37,18 @@ export function useList(path: string, params: useListParams = { progress: false 
         }
       } else {
         setFiles(list)
+
+        if (type === 'uploaded') {
+          params.onUploaded?.(_key)
+        } else if (type === 'downloaded') {
+          params.onDownloaded?.(_key)
+        } else if (type === 'fatal') {
+          params.onError?.(
+            _key,
+            list.find((s) => s.key === _key),
+            true
+          )
+        }
       }
     })
 
