@@ -52,3 +52,9 @@ export type useListParams = {
   onDownloaded?: (key: string) => void
   onError?: (key: string, error: unknown, fata: boolean) => void
 }
+
+export type directListeners = {
+  onUploaded?: (key: string) => void
+  onDownloaded?: (key: string) => void
+  onError?: (key: string, error: unknown, fata: boolean) => void
+}
