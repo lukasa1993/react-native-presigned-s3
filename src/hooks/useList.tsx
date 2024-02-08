@@ -47,6 +47,9 @@ export function useList(path: string, params: useListParams = { progress: false 
         } else if (type === 'downloaded') {
           params.onDownloaded?.(_key)
           directListeners.current[_key]?.onDownloaded?.(_key)
+        } else if (type === 'remove') {
+          params.onRemove?.(_key)
+          directListeners.current[_key]?.onRemove?.(_key)
         } else if (type === 'fatal') {
           directListeners.current[_key]?.onError?.(_key, list.find((s) => s.key === _key)?.error, true)
           params.onError?.(
@@ -64,7 +67,8 @@ export function useList(path: string, params: useListParams = { progress: false 
   }, [path, params.progress, s3Client])
 
   const removeFile = useCallback(
-    (key: string) => {
+    (key: string, listeners: directListeners = {}) => {
+      directListeners.current[key] = listeners
       return s3Client.remove(key)
     },
     [s3Client]
