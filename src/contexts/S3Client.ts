@@ -162,7 +162,7 @@ export class S3Client {
       })
   }
 
-  remove(key: string) {
+  remove(key: string, s3Remove: boolean = false) {
     setImmediate(async () => {
       try {
         await cancelDownload(`${this.items[key].downloadId}`)
@@ -170,9 +170,11 @@ export class S3Client {
       try {
         await cancelUpload(`${this.items[key].uploadId}`)
       } catch (_) {}
-      try {
-        await this.s3Handlers.remove(key)
-      } catch (_) {}
+      if (s3Remove) {
+        try {
+          await this.s3Handlers.remove(key)
+        } catch (_) {}
+      }
       try {
         await removeFile(key, this.config.directory)
       } catch (e) {}
@@ -258,8 +260,8 @@ export class S3Client {
         }
 
         for (const removedKey of removedKeys) {
-          if (this.items[removedKey].existsLocally && this.config.autoRemove) {
-            this.remove(removedKey)
+          if (this.items[removedKey].existsLocally) {
+            this.remove(removedKey, this.config.autoRemove)
           }
         }
 
