@@ -10,7 +10,7 @@ export function useList(path: string, params: useListParams = { progress: false 
 
   const [error, setError] = useState<any[]>([])
 
-  const directListeners = useRef<{ [key: string]: directListeners }>({})
+  const directListenersRef = useRef<{ [key: string]: directListeners }>({})
 
   const reload = useCallback(() => {
     setLoading(true)
@@ -29,7 +29,7 @@ export function useList(path: string, params: useListParams = { progress: false 
         for (const s3Item of list) {
           errors.push(s3Item.error)
           if (s3Item.key === _key) {
-            directListeners.current[_key]?.onError?.(_key, s3Item?.error, false)
+            directListenersRef.current[_key]?.onError?.(_key, s3Item?.error, false)
             params.onError?.(s3Item.key, s3Item.error, false)
           }
         }
@@ -43,15 +43,15 @@ export function useList(path: string, params: useListParams = { progress: false 
 
         if (type === 'uploaded') {
           params.onUploaded?.(_key)
-          directListeners.current[_key]?.onUploaded?.(_key)
+          directListenersRef.current[_key]?.onUploaded?.(_key)
         } else if (type === 'downloaded') {
           params.onDownloaded?.(_key)
-          directListeners.current[_key]?.onDownloaded?.(_key)
+          directListenersRef.current[_key]?.onDownloaded?.(_key)
         } else if (type === 'remove') {
           params.onRemove?.(_key)
-          directListeners.current[_key]?.onRemove?.(_key)
+          directListenersRef.current[_key]?.onRemove?.(_key)
         } else if (type === 'fatal') {
-          directListeners.current[_key]?.onError?.(_key, list.find((s) => s.key === _key)?.error, true)
+          directListenersRef.current[_key]?.onError?.(_key, list.find((s) => s.key === _key)?.error, true)
           params.onError?.(
             _key,
             list.find((s) => s.key === _key),
@@ -68,21 +68,21 @@ export function useList(path: string, params: useListParams = { progress: false 
 
   const removeFile = useCallback(
     (key: string, listeners: directListeners = {}) => {
-      directListeners.current[key] = listeners
+      directListenersRef.current[key] = listeners
       return s3Client.remove(key)
     },
     [s3Client]
   )
   const addUpload = useCallback(
     (key: string, filePath: string, meta: any, listeners: directListeners = {}) => {
-      directListeners.current[key] = listeners
+      directListenersRef.current[key] = listeners
       return s3Client.addUpload(key, filePath, meta)
     },
     [s3Client]
   )
   const addDownload = useCallback(
     (key: string, listeners: directListeners = {}) => {
-      directListeners.current[key] = listeners
+      directListenersRef.current[key] = listeners
       return s3Client.addDownload(key)
     },
     [s3Client]
