@@ -22,6 +22,7 @@ export async function uploadHandler({
     method: 'POST',
     type: 'multipart',
     field: 'file',
+    customUploadId: key,
     parameters: {
       ...fields,
       'x-amz-meta-json': JSON.stringify(payload),
