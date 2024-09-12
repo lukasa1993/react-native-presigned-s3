@@ -69,7 +69,7 @@ export function useList(path: string, params: useListParams = { progress: false 
   const removeFile = useCallback(
     (key: string, listeners: directListeners = {}) => {
       directListenersRef.current[key] = listeners
-      return s3Client.remove(key)
+      return s3Client.remove(key, true)
     },
     [s3Client]
   )
