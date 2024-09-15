@@ -1,4 +1,4 @@
-import React, { createContext } from 'react'
+import React, { createContext, useContext } from 'react'
 import { ViewProps } from 'react-native'
 import { S3Client } from './S3Client'
 
@@ -22,7 +22,7 @@ export const PS3Consumer = PS3Context.Consumer
 export default PS3Context
 
 export const useS3Client = () => {
-  const ctx = React.useContext(PS3Context)
+  const ctx = useContext(PS3Context)
 
   return ctx!.s3client
 }

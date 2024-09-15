@@ -87,6 +87,9 @@ export function useList(path: string, params: useListParams = { progress: false 
     },
     [s3Client]
   )
+  const fullClear = useCallback(() => {
+    return s3Client.fulLClear()
+  }, [s3Client])
 
   return {
     files,
@@ -96,5 +99,6 @@ export function useList(path: string, params: useListParams = { progress: false 
     removeFile,
     addUpload,
     addDownload,
+    fullClear,
   }
 }

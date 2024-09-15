@@ -2,7 +2,16 @@ import { ListenerCB, notifyTypes, S3ClientConfig, S3Handlers, S3Item, S3ItemStor
 import PQueue from 'p-queue'
 import { cancelUpload, uploadHandler } from '../helper/uploader'
 import { cancelDownload, downloadHandler } from '../helper/downloader'
-import { baseName, confirmHash, existsLocal, localPath, makeDir, pathJoin, removeFile } from '../helper/fs'
+import {
+  baseName,
+  confirmHash,
+  existsLocal,
+  localPath,
+  makeDir,
+  pathJoin,
+  removeFile,
+  removeFolder,
+} from '../helper/fs'
 import { restore, store } from '../helper/persistor'
 import InternalListener from '../helper/listener'
 
@@ -168,7 +177,7 @@ export class S3Client {
         await cancelDownload(`${this.items[key].downloadId}`)
       } catch (_) {}
       try {
-        await cancelUpload(`${this.items[key].uploadId}`)
+        cancelUpload(`${this.items[key].uploadId}`)
       } catch (_) {}
       if (s3Remove) {
         try {
@@ -343,5 +352,9 @@ export class S3Client {
         )
       } catch (_) {}
     }
+  }
+
+  fulLClear() {
+    return removeFolder(this.config.directory)
   }
 }

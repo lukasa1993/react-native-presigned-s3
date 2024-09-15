@@ -1,7 +1,8 @@
-import Upload, { MultipartUploadOptions } from 'react-native-background-upload'
+import { backgroundUpload, cancelUpload as uploaderCancel, UploadType } from 'react-native-compressor'
 import { Platform } from 'react-native'
 import { S3ClientConfig, S3Handlers, S3Item } from '../types'
 import InternalListener from './listener'
+import { UploaderOptions } from 'react-native-compressor/lib/typescript/utils'
 
 export async function uploadHandler({
   system,
@@ -10,19 +11,16 @@ export async function uploadHandler({
   system: { config: S3ClientConfig; s3Handlers: S3Handlers; internalListener: InternalListener }
   item: S3Item
 }) {
-  const { config, s3Handlers, internalListener } = system
+  const { s3Handlers, internalListener } = system
   const key = item.key
   const { extra, payload, type } = item.meta || { payload: {}, extra: {}, type: 'binary/octet-stream' }
 
   const { fields, url } = await s3Handlers.create({ key, type: type })
 
-  const options: MultipartUploadOptions = {
-    url,
-    path: Platform.OS === 'ios' ? `file://${item.filePath!}` : item.filePath!,
-    method: 'POST',
-    type: 'multipart',
-    field: 'file',
-    customUploadId: key,
+  const options: UploaderOptions = {
+    httpMethod: 'POST',
+    uploadType: UploadType.MULTIPART,
+    fieldName: 'file',
     parameters: {
       ...fields,
       'x-amz-meta-json': JSON.stringify(payload),
@@ -32,31 +30,28 @@ export async function uploadHandler({
     headers: {
       'Content-Type': type,
     },
-    notification: {
-      enabled: false,
-    },
-    appGroup: config.appGroup,
+    mimeType: type,
+    getCancellationId: (cancellationId) => (item.uploadId = cancellationId),
   }
 
   try {
-    item.uploadId = await Upload.startUpload(options)
+    const uploadRes = backgroundUpload(
+      url,
+      Platform.OS === 'ios' ? `file://${item.filePath!}` : item.filePath!,
+      options,
+      (written, total) => {
+        internalListener.uploadProgress(key, item)(written, total)
+      }
+    )
     internalListener.uploadStarted(key, item)
+    const uploadResult = await uploadRes
+    internalListener.uploadCompleted(key, item)(uploadResult)
   } catch (e) {
     console.error('create upload error', e)
+    internalListener.uploadError(key, item)(e)
   }
-
-  // @ts-ignore
-  Upload.addListener('progress', item.uploadId, internalListener.uploadProgress(key, item))
-
-  // @ts-ignore
-  Upload.addListener('error', item.uploadId, internalListener.uploadError(key, item))
-
-  // @ts-ignore
-  Upload.addListener('completed', item.uploadId, internalListener.uploadCompleted(key, item))
-
-  Upload.addListener('cancelled', item.uploadId!, internalListener.uploadCancelled(key, item))
 }
 
-export async function cancelUpload(uploadID: string) {
-  return Upload.cancelUpload(uploadID).catch((e) => console.error('cancel upload error', e))
+export function cancelUpload(uploadID: string) {
+  uploaderCancel(uploadID)
 }
