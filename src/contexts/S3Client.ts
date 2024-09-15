@@ -318,12 +318,17 @@ export class S3Client {
       this.items[key].retries--
 
       if (this.items[key].state === 'uploading') {
+        if (!existsLocal(key, this.config.directory)) {
+          return this.remove(key)
+        }
         this.items[key].uploadId = undefined
         this.addUpload(key, this.items[key].filePath!, this.items[key]?.meta)
       } else if (this.items[key].state === 'downloading') {
         this.items[key].downloadId = undefined
         this.addDownload(key)
       }
+    } else {
+      this.remove(key)
     }
   }
 
@@ -332,7 +337,9 @@ export class S3Client {
       this.items[key] = item
     }
     if (type === 'remove') {
-      delete this.items[key]
+      try {
+        delete this.items[key]
+      } catch (e) {}
     } else if (type === 'error') {
       this.handleError(key)
     }

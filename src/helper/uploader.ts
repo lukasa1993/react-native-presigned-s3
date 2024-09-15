@@ -4,6 +4,7 @@ import { S3ClientConfig, S3Handlers, S3Item } from '../types'
 import InternalListener from './listener'
 import { UploaderOptions } from 'react-native-compressor/lib/typescript/utils'
 
+
 export async function uploadHandler({
   system,
   item,
@@ -45,13 +46,18 @@ export async function uploadHandler({
     )
     internalListener.uploadStarted(key, item)
     const uploadResult = await uploadRes
-    internalListener.uploadCompleted(key, item)(uploadResult)
+    if (uploadResult.status === 400) {
+      internalListener.uploadError(key, item)(uploadResult)
+    } else {
+      internalListener.uploadCompleted(key, item)(uploadResult)
+    }
   } catch (e) {
-    console.error('create upload error', e)
+    console.error('create upload error', JSON.stringify(e))
     internalListener.uploadError(key, item)(e)
   }
 }
 
 export function cancelUpload(uploadID: string) {
+  console.log(`upload canceled: `, uploadID)
   uploaderCancel(uploadID)
 }

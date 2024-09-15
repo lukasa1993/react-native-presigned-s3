@@ -16,5 +16,5 @@ export async function restore(config: S3ClientConfig): Promise<S3ItemStorage> {
     return {}
   }
   const serialized = await AsyncStorage.getItem(config.persistKey)
-  return JSON.parse(serialized)
+  return JSON.parse(serialized || '{}')
 }
