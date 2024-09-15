@@ -4,7 +4,6 @@ import { S3ClientConfig, S3Handlers, S3Item } from '../types'
 import InternalListener from './listener'
 import { UploaderOptions } from 'react-native-compressor/lib/typescript/utils'
 
-
 export async function uploadHandler({
   system,
   item,
@@ -41,7 +40,7 @@ export async function uploadHandler({
       Platform.OS === 'ios' ? `file://${item.filePath!}` : item.filePath!,
       options,
       (written, total) => {
-        internalListener.uploadProgress(key, item)(written, total)
+        internalListener.uploadProgress(key, item)({ progress: (written * 100) / total })
       }
     )
     internalListener.uploadStarted(key, item)
