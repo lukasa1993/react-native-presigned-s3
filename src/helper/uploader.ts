@@ -28,7 +28,7 @@ export async function uploadHandler({
       'Content-Type': type,
     },
     headers: {
-      'Content-Type': type,
+      // 'Content-Type': type,
     },
     mimeType: type,
     getCancellationId: (cancellationId) => (item.uploadId = cancellationId),
@@ -45,7 +45,7 @@ export async function uploadHandler({
     )
     internalListener.uploadStarted(key, item)
     const uploadResult = await uploadRes
-    if (uploadResult.status === 400) {
+    if (uploadResult.status >= 400) {
       internalListener.uploadError(key, item)(uploadResult)
     } else {
       internalListener.uploadCompleted(key, item)(uploadResult)

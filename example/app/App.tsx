@@ -14,7 +14,7 @@ const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      cacheTime: 60000,
+      gcTime: 60000,
     },
   },
 });
@@ -27,11 +27,12 @@ const handlers: S3Handlers = {
 };
 
 const s3Client = new S3Client(handlers, {
+  autoRemove: false,
   appGroup: 'com.example.ps3.test',
   directory: 'ps3_test',
   immediateDownload: false,
   persistKey: '@example_ps3_storage_key',
-  retries: 5,
+  retries: 0,
   shouldPersist: false,
 });
 

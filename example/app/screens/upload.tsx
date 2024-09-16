@@ -26,29 +26,32 @@ export default function UploadScreen() {
   const current_path = params!.path;
   const {addUpload} = useList(current_path);
 
-  useQuery(['permissions'], async () => {
-    let perms = {};
-    if (Platform.OS !== 'ios') {
-      try {
-        perms = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          PermissionsAndroid.PERMISSIONS.ACCESS_MEDIA_LOCATION,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-        ]);
-        console.log(perms);
-      } catch (e) {
-        console.error(e);
+  useQuery({
+    queryKey: ['permissions'],
+    queryFn: async () => {
+      let perms = {};
+      if (Platform.OS !== 'ios') {
+        try {
+          perms = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_MEDIA_LOCATION,
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          ]);
+          console.log(perms);
+        } catch (e) {
+          console.error(e);
+        }
       }
-    }
 
-    return perms;
+      return perms;
+    },
   });
 
   const upload = useMutation({
@@ -105,14 +108,14 @@ export default function UploadScreen() {
       </Text>
       <TouchableOpacity
         style={styles.button}
-        disabled={upload.isLoading || docUpload.isLoading}
+        disabled={upload.isPending || docUpload.isPending}
         onPress={() => upload.mutateAsync()}>
         <Text style={styles.text}>Pick Image</Text>
       </TouchableOpacity>
       <View style={{height: 100}} />
       <TouchableOpacity
         style={styles.button}
-        disabled={upload.isLoading || docUpload.isLoading}
+        disabled={upload.isPending || docUpload.isPending}
         onPress={() => docUpload.mutateAsync()}>
         <Text style={styles.text}>Doc Image</Text>
       </TouchableOpacity>

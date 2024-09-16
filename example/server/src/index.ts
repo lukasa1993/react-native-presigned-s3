@@ -12,6 +12,7 @@ app.use(bodyParser.json())
 app.post('/create', async (req, res) => {
   try {
     const payload = await s3.create(req.body)
+    console.log('create', payload)
     res.json(payload)
   } catch (e) {
     console.error('Create Error', req.body, e)

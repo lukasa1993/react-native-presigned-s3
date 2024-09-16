@@ -44,15 +44,7 @@ export default function FileRow({
         return addDownload(key);
       }
     }
-  }, [
-    meta?.isFolder,
-    meta?.path,
-    navigation,
-    pathFile,
-    locallyExists,
-    addDownload,
-    key,
-  ]);
+  }, [meta.isFolder, meta.path, navigation, addDownload, key]);
 
   useEffect(() => {
     if (openAfterDownload && pathFile && locallyExists) {

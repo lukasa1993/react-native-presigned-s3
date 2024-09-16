@@ -33,7 +33,7 @@ export default function ListScreen() {
         }),
     [current_path, files],
   );
-
+  console.log(files?.[0]?.error, files?.[0]?.response);
   return (
     <View
       style={{
@@ -55,9 +55,15 @@ export default function ListScreen() {
         keyExtractor={item => item.key}
         renderItem={({item}) => {
           if (item.meta.isFolder) {
-            return <FolderRow folderPath={item.key} name={item.name} />;
+            return (
+              <FolderRow
+                folderPath={item.key}
+                name={item.name}
+                key={item.key}
+              />
+            );
           }
-          return <FileRow fileKey={item.key} {...item} />;
+          return <FileRow fileKey={item.key} {...item} key={item.key} />;
         }}
       />
     </View>
