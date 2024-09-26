@@ -290,6 +290,7 @@ export class S3Client {
     }
 
     this.listenersIndex[prefix]++
+    this.listenersIndex[prefix] = this.listenersIndex[prefix] % 1_000_000
 
     const id = `${prefix}_${this.listenersIndex[prefix]}`
 
@@ -302,15 +303,11 @@ export class S3Client {
   }
 
   removeListener(id: string) {
-    const { prefix } = this.listeners[id]
-
-    this.listenersIndex[prefix]--
-
-    if (this.listenersIndex[prefix] <= 0) {
-      delete this.listenersIndex[prefix]
+    if (!this.listeners[id]) {
+      return
     }
 
-    delete this.listenersIndex[id]
+    delete this.listeners[id]
   }
 
   handleError(key: string) {
